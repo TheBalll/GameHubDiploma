@@ -1,0 +1,81 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{% block title %}GameHub{% endblock %}</title>
+
+    <link rel="stylesheet" href="{% static 'games/css/style.css' %}">
+</head>
+
+<body>
+
+   <!-- NAVBAR -->
+<nav class="navbar">
+
+    <a href="/" class="logo">
+         GameHub
+    </a>
+
+    <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="#">Games</a>
+        <a href="#">Community</a>
+        <a href="#">My Library</a>
+    </div>
+
+    <div class="nav-right">
+        <input
+            type="text"
+            class="search-bar"
+            placeholder="Search games..."
+        >
+
+        <a href="#" class="login-btn">Login</a>
+        <a href="#" class="register-btn">Register</a>
+    </div>
+
+</nav>
+
+
+    <!-- PAGE CONTENT -->
+    <main>
+        {% block content %}
+
+        {% endblock %}
+    </main>
+
+<!-- FOOTER -->
+<footer class="footer">
+
+    <div class="footer-content">
+
+        <div class="footer-about">
+            <h2>GameHub</h2>
+            <p>
+                Discover games, share your reviews
+                and connect with other gamers.
+            </p>
+        </div>
+
+        <div class="footer-links">
+            <a href="/">Home</a>
+            <a href="#">Games</a>
+            <a href="#">Community</a>
+            <a href="#">About</a>
+        </div>
+
+    </div>
+
+    <div class="footer-bottom">
+        <p>&copy; 2026 GameHub. All rights reserved.</p>
+    </div>
+
+</footer>
+   
+
+</body>
+</html>

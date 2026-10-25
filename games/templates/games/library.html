@@ -1,0 +1,63 @@
+{% extends 'games/base.html' %}
+
+{% block title %}My Library | GameHub{% endblock %}
+
+{% block content %}
+
+<section class="library-section">
+
+    <div class="library-header">
+        <p class="library-label">YOUR COLLECTION</p>
+        <h1>My Library</h1>
+        <p>Keep track of the games you play.</p>
+    </div>
+
+    <div class="library-grid">
+
+        {% for entry in library_entries %}
+
+            <div class="library-card">
+
+                <span class="game-genre">
+                    {{ entry.game.genre }}
+                </span>
+
+                <h2>{{ entry.game.title }}</h2>
+
+                <p>
+                    <strong>Status:</strong>
+                    {{ entry.get_status_display }}
+                </p>
+
+                <p>
+                    <strong>Hours Played:</strong>
+                    {{ entry.hours_played }}
+                </p>
+
+                <div class="library-actions">
+
+                   <a href="{% url 'edit_library_entry' entry.game.id %}" class="edit-library-btn">
+                       Edit
+                   </a>
+
+                      <a href="{% url 'game_detail' entry.game.id %}" class="details-btn">
+                      View Details
+                     </a>
+
+                   <a href="{% url 'remove_from_library' entry.game.id %}" class="remove-library-btn">
+                     Remove
+                   </a>
+
+                </div>
+
+        {% empty %}
+
+            <p>Your library is empty.</p>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
+{% endblock %}

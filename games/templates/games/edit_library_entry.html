@@ -1,0 +1,59 @@
+{% extends 'games/base.html' %}
+
+{% block title %}Edit Library | GameHub{% endblock %}
+
+{% block content %}
+
+<section class="auth-section">
+
+    <div class="auth-card">
+
+        <div class="auth-header">
+            <p class="auth-label">MY LIBRARY</p>
+
+            <h1>Edit {{ library_entry.game.title }}</h1>
+
+            <p>
+                Update your game status and hours played.
+            </p>
+        </div>
+
+        <form method="POST" class="auth-form">
+
+            {% csrf_token %}
+
+            <div class="auth-field">
+                <label for="{{ form.status.id_for_label }}">
+                    Status
+                </label>
+
+                {{ form.status }}
+                {{ form.status.errors }}
+            </div>
+
+            <div class="auth-field">
+                <label for="{{ form.hours_played.id_for_label }}">
+                    Hours Played
+                </label>
+
+                {{ form.hours_played }}
+                {{ form.hours_played.errors }}
+            </div>
+
+            <button type="submit" class="auth-submit-btn">
+                Save Changes
+            </button>
+
+        </form>
+
+        <p class="auth-switch">
+            <a href="{% url 'library' %}">
+                Back to My Library
+            </a>
+        </p>
+
+    </div>
+
+</section>
+
+{% endblock %}

@@ -267,6 +267,14 @@ main {
     border-radius: 14px;
     padding: 25px;
     transition: transform 0.2s ease, border-color 0.2s ease;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.game-card:visited {
+    color: inherit;
 }
 
 .game-card:hover {
@@ -605,4 +613,202 @@ main {
 
 .review-submit-btn:hover {
     background: #846cff;
+}
+
+/* My Library */
+
+.library-section {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 70px 30px;
+    min-height: 70vh;
+}
+
+.library-header {
+    text-align: center;
+    margin-bottom: 45px;
+}
+
+.library-label {
+    color: #8b7cff;
+    font-size: 13px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+}
+
+.library-header h1 {
+    color: #ffffff;
+    font-size: 38px;
+    margin-bottom: 12px;
+}
+
+.library-header > p:last-child {
+    color: #9999aa;
+    font-size: 16px;
+}
+
+.library-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+}
+
+.library-card {
+    background: #151520;
+    border: 1px solid #2a2a3a;
+    border-radius: 16px;
+    padding: 28px;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.library-card:hover {
+    transform: translateY(-4px);
+    border-color: #8b7cff;
+}
+
+.library-card h2 {
+    color: #ffffff;
+    font-size: 23px;
+    margin: 14px 0 20px;
+}
+
+.library-card p {
+    color: #aaaabb;
+    margin: 10px 0;
+}
+
+.library-card strong {
+    color: #dddded;
+}
+
+.library-card .details-btn {
+    display: inline-block;
+    margin-top: 18px;
+}
+
+
+
+/* Empty Library */
+
+.library-grid > p {
+    grid-column: 1 / -1;
+    text-align: center;
+    color: #9999aa;
+    background: #151520;
+    border: 1px solid #2a2a3a;
+    border-radius: 16px;
+    padding: 45px 20px;
+}
+
+
+
+/* Add to Library Button */
+
+.add-library-btn {
+    display: inline-block;
+    margin-top: 25px;
+    padding: 12px 22px;
+    background: #7357ff;
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.add-library-btn:hover {
+    background: #846cff;
+    transform: translateY(-2px);
+    color: #ffffff;
+}
+
+/* Library Buttons */
+
+.library-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 22px;
+}
+
+.library-actions .details-btn {
+    margin-top: 0;
+    padding: 11px 18px;
+    background: #7357ff;
+    color: #ffffff;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.library-actions .details-btn:hover {
+    background: #846cff;
+}
+
+.edit-library-btn {
+    padding: 11px 18px;
+    background: #242033;
+    color: #a99cff;
+    border: 1px solid #443a70;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.edit-library-btn:hover {
+    background: #302944;
+    border-color: #8b7cff;
+    color: #ffffff;
+}
+
+.remove-library-btn {
+    padding: 11px 18px;
+    background: #2a2028;
+    color: #ff7b87;
+    border: 1px solid #553039;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.remove-library-btn:hover {
+    background: #3a252d;
+    border-color: #ff7b87;
+}
+
+/* Edit Library Form */
+
+.auth-field select {
+    width: 100%;
+    padding: 13px 15px;
+    background: #0d0d14;
+    border: 1px solid #30303f;
+    border-radius: 8px;
+    color: #ffffff;
+    font-size: 15px;
+    outline: none;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+.auth-field select:focus {
+    border-color: #8b7cff;
+}
+
+
+/* Remove number input arrows everywhere */
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    appearance: textfield;
+    -moz-appearance: textfield;
 }

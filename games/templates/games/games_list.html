@@ -16,27 +16,29 @@
 
         {% for game in games %}
 
-            <div class="game-card" data-title="{{ game.title|lower }}">
+           <a
+           href="{% url 'game_detail' game.id %}"
+           class="game-card"
+           data-title="{{ game.title|lower }}">
 
-                <div class="game-card-content">
-                    <span class="game-genre">{{ game.genre }}</span>
+    <div class="game-card-content">
 
-                    <h2>{{ game.title }}</h2>
+        <span class="game-genre">{{ game.genre }}</span>
 
-                    <p class="game-description">
-                        {{ game.description }}
-                    </p>
+        <h2>{{ game.title }}</h2>
 
-                    <div class="game-info">
-                        <p><strong>Developer:</strong> {{ game.developer }}</p>
-                        <p><strong>Released:</strong> {{ game.release_year }}</p>
-                    </div>
-                    <a href="{% url 'game_detail' game.id %}" class="details-btn">
-                      View Details
-                    </a>
-                </div>
+        <p class="game-description">
+            {{ game.description }}
+        </p>
 
-            </div>
+        <div class="game-info">
+            <p><strong>Developer:</strong> {{ game.developer }}</p>
+            <p><strong>Released:</strong> {{ game.release_year }}</p>
+        </div>
+
+    </div>
+
+</a>
 
         {% empty %}
 

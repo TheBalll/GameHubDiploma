@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Game, Review
-from .forms import ReviewForm
+from .models import Game, Review, LibraryEntry
+from .forms import ReviewForm, LibraryEntryForm
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import authenticate, login, logout
 
@@ -88,3 +88,72 @@ def delete_review(request, review_id):
         return redirect('game_detail', game_id=game_id)
 
     return redirect('game_detail', game_id=review.game.id)
+
+def library(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
+
+    library_entries = LibraryEntry.objects.filter(
+        user=request.user
+    )
+
+    return render(request, 'games/library.html', {
+        'library_entries': library_entries
+    })
+
+def add_to_library(request, game_id):
+    if not request.user.is_authenticated:
+        return redirect('login')
+
+    game = get_object_or_404(Game, id=game_id)
+
+    LibraryEntry.objects.get_or_create(
+        user=request.user,
+        game=game
+    )
+
+    return redirect('library')
+
+def remove_from_library(request, game_id):
+    if not request.user.is_authenticated:
+        return redirect('login')
+
+    library_entry = get_object_or_404(
+        LibraryEntry,
+        user=request.user,
+        game_id=game_id
+    )
+
+    library_entry.delete()
+
+    return redirect('library')
+
+def edit_library_entry(request, game_id):
+    if not request.user.is_authenticated:
+        return redirect('login')
+
+    library_entry = get_object_or_404(
+        LibraryEntry,
+        user=request.user,
+        game_id=game_id
+    )
+
+    if request.method == 'POST':
+        form = LibraryEntryForm(
+            request.POST,
+            instance=library_entry
+        )
+
+        if form.is_valid():
+            form.save()
+            return redirect('library')
+
+    else:
+        form = LibraryEntryForm(
+            instance=library_entry
+        )
+
+    return render(request, 'games/edit_library_entry.html', {
+        'form': form,
+        'library_entry': library_entry
+    })

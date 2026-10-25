@@ -32,6 +32,16 @@
             </p>
         </div>
 
+        {% if user.is_authenticated %}
+     <a href="{% url 'add_to_library' game.id %}" class="add-library-btn">
+        Add to Library
+     </a>
+        {% else %}
+     <a href="{% url 'login' %}" class="add-library-btn">
+        Login to Add to Library
+     </a>
+     {% endif %}
+
     </div>
 
 <div class="reviews-section">

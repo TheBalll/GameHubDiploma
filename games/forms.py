@@ -1,5 +1,5 @@
 from django import forms
-from .models import Review
+from .models import Review, LibraryEntry
 
 
 class ReviewForm(forms.ModelForm):
@@ -9,4 +9,14 @@ class ReviewForm(forms.ModelForm):
         fields = [
             'rating',
             'comment'
+        ]
+
+
+class LibraryEntryForm(forms.ModelForm):
+    class Meta:
+        model = LibraryEntry
+
+        fields = [
+            'status',
+            'hours_played'
         ]

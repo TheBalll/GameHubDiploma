@@ -224,3 +224,385 @@ main {
     background-color: #29293a;
     border-color: #8b7cff;
 }
+
+/* GAMES PAGE */
+
+.games-section {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 70px 40px;
+}
+
+.games-header {
+    margin-bottom: 40px;
+}
+
+.games-label {
+    color: #8b7cff;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+}
+
+.games-header h1 {
+    font-size: 42px;
+    margin-bottom: 10px;
+}
+
+.games-header > p:last-child {
+    color: #a5a5b5;
+    font-size: 16px;
+}
+
+.games-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+}
+
+.game-card {
+    background: #151520;
+    border: 1px solid #29293a;
+    border-radius: 14px;
+    padding: 25px;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.game-card:hover {
+    transform: translateY(-5px);
+    border-color: #7357ff;
+}
+
+.game-genre {
+    display: inline-block;
+    color: #8b7cff;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+.game-card h2 {
+    font-size: 24px;
+    margin-bottom: 12px;
+}
+
+.game-description {
+    color: #b0b0bd;
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+.game-info {
+    border-top: 1px solid #29293a;
+    padding-top: 15px;
+}
+
+.game-info p {
+    color: #a5a5b5;
+    margin: 5px 0;
+}
+
+.game-info strong {
+    color: #ffffff;
+}
+
+@media (max-width: 800px) {
+    .games-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .games-section {
+        padding: 40px 20px;
+    }
+}
+
+/* GAME DETAILS PAGE */
+
+.game-detail {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 70px 40px;
+}
+
+.back-link {
+    display: inline-block;
+    color: #8b7cff;
+    text-decoration: none;
+    margin-bottom: 25px;
+}
+
+.back-link:hover {
+    text-decoration: underline;
+}
+
+.game-detail-card {
+    background: #151520;
+    border: 1px solid #29293a;
+    border-radius: 16px;
+    padding: 40px;
+}
+
+.game-detail-card h1 {
+    font-size: 42px;
+    margin: 10px 0 20px;
+}
+
+.game-detail-description {
+    color: #b0b0bd;
+    font-size: 17px;
+    line-height: 1.7;
+    margin-bottom: 30px;
+}
+
+.game-detail-info {
+    border-top: 1px solid #29293a;
+    padding-top: 20px;
+}
+
+.game-detail-info p {
+    color: #b0b0bd;
+    margin: 8px 0;
+}
+
+.game-detail-info strong {
+    color: #ffffff;
+}
+
+/* REVIEWS */
+
+.reviews-section {
+    margin-top: 40px;
+}
+
+.reviews-section h2 {
+    font-size: 28px;
+    margin-bottom: 20px;
+}
+
+.review-card {
+    background: #151520;
+    border: 1px solid #29293a;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 15px;
+}
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.review-header strong {
+    font-size: 17px;
+}
+
+.review-header span {
+    color: #8b7cff;
+    font-weight: 600;
+}
+
+.review-card p {
+    color: #b0b0bd;
+    line-height: 1.6;
+    margin-bottom: 12px;
+}
+
+.review-card small {
+    color: #777788;
+}
+
+.no-reviews {
+    color: #a5a5b5;
+}
+
+/* Authentication Pages */
+
+.auth-section {
+    min-height: 75vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 60px 20px;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 460px;
+    background: #151520;
+    border: 1px solid #2a2a3a;
+    border-radius: 16px;
+    padding: 40px;
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.auth-label {
+    color: #8b7cff;
+    font-size: 13px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+}
+
+.auth-header h1 {
+    color: #ffffff;
+    font-size: 30px;
+    margin-bottom: 10px;
+}
+
+.auth-header p {
+    color: #9999aa;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.auth-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.auth-field label {
+    color: #dddded;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.auth-field input {
+    width: 100%;
+    padding: 13px 15px;
+    background: #0d0d14;
+    border: 1px solid #30303f;
+    border-radius: 8px;
+    color: #ffffff;
+    font-size: 15px;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.auth-field input:focus {
+    border-color: #8b7cff;
+}
+
+.auth-field input::placeholder {
+    color: #666677;
+}
+
+.auth-submit-btn {
+    width: 100%;
+    padding: 13px;
+    margin-top: 5px;
+    border: none;
+    border-radius: 8px;
+    background: #7357ff;
+    color: white;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.auth-submit-btn:hover {
+    background: #846cff;
+}
+
+.auth-switch {
+    text-align: center;
+    color: #9999aa;
+    font-size: 14px;
+    margin-top: 25px;
+}
+
+.auth-switch a {
+    color: #8b7cff;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.auth-switch a:hover {
+    text-decoration: underline;
+}
+
+/* Add Review */
+
+.add-review-section {
+    margin-top: 40px;
+    padding: 30px;
+    background: #151520;
+    border: 1px solid #2a2a3a;
+    border-radius: 16px;
+}
+
+.add-review-section h2 {
+    color: #ffffff;
+    margin-bottom: 25px;
+}
+
+.add-review-section form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.add-review-section form p {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+}
+
+.add-review-section label {
+    color: #dddded;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.add-review-section input,
+.add-review-section textarea,
+.add-review-section select {
+    width: 100%;
+    padding: 13px 15px;
+    background: #0d0d14;
+    border: 1px solid #30303f;
+    border-radius: 8px;
+    color: #ffffff;
+    font-size: 15px;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.add-review-section textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.add-review-section input:focus,
+.add-review-section textarea:focus,
+.add-review-section select:focus {
+    border-color: #8b7cff;
+}
+
+.review-submit-btn {
+    padding: 13px 20px;
+    background: #7357ff;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    align-self: flex-start;
+}
+
+.review-submit-btn:hover {
+    background: #846cff;
+}

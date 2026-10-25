@@ -1,0 +1,94 @@
+{% extends 'games/base.html' %}
+
+{% block title %}{{ game.title }} | GameHub{% endblock %}
+
+{% block content %}
+
+<section class="game-detail">
+
+    <a href="{% url 'games_list' %}" class="back-link">
+        Back to Games
+    </a>
+
+    <div class="game-detail-card">
+
+        <span class="game-genre">{{ game.genre }}</span>
+
+        <h1>{{ game.title }}</h1>
+
+        <p class="game-detail-description">
+            {{ game.description }}
+        </p>
+
+        <div class="game-detail-info">
+            <p>
+                <strong>Developer:</strong>
+                {{ game.developer }}
+            </p>
+
+            <p>
+                <strong>Release Year:</strong>
+                {{ game.release_year }}
+            </p>
+        </div>
+
+    </div>
+
+<div class="reviews-section">
+
+    <h2>Reviews</h2>
+
+    {% for review in reviews %}
+
+        <div class="review-card">
+
+            <div class="review-header">
+                <strong>{{ review.user.username }}</strong>
+                <span>{{ review.rating }}/10</span>
+            </div>
+
+            <p>{{ review.comment }}</p>
+
+            <small>
+                {{ review.created_at|date:"d M Y" }}
+            </small>
+            {% if user == review.user %}
+
+               <a href="{% url 'delete_review' review.id %}" class="delete-review-btn">
+                 Delete
+               </a>
+
+            {% endif %}
+
+        </div>
+
+    {% empty %}
+
+        <p class="no-reviews">
+            No reviews yet.
+        </p>
+
+    {% endfor %}
+
+</div>
+
+<div class="add-review-section">
+
+    <h2>Add Review</h2>
+
+    <form method="POST">
+
+        {% csrf_token %}
+
+        {{ form.as_p }}
+
+        <button type="submit" class="review-submit-btn">
+            Submit Review
+        </button>
+
+    </form>
+
+</div>
+</section>
+
+{% endblock %}

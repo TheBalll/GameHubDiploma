@@ -22,20 +22,30 @@
 
     <div class="nav-links">
         <a href="/">Home</a>
-        <a href="#">Games</a>
+        <a href="{% url 'games_list' %}">Games</a>
         <a href="#">Community</a>
         <a href="#">My Library</a>
     </div>
 
     <div class="nav-right">
-        <input
-            type="text"
-            class="search-bar"
-            placeholder="Search games..."
+       <input
+           type="text"
+           class="search-bar"
+           id="game-search"
+           placeholder="Search games..."
         >
 
-        <a href="#" class="login-btn">Login</a>
-        <a href="#" class="register-btn">Register</a>
+      {% if user.is_authenticated %}
+
+    <span>{{ user.username }}</span>
+    <a href="{% url 'logout' %}" class="login-btn">Logout</a>
+
+{% else %}
+
+    <a href="{% url 'login' %}" class="login-btn">Login</a>
+    <a href="{% url 'register' %}" class="register-btn">Register</a>
+
+{% endif %}
     </div>
 
 </nav>
@@ -76,6 +86,7 @@
 
 </footer>
    
+<script src="{% static 'games/js/search.js' %}"></script>
 
 </body>
 </html>

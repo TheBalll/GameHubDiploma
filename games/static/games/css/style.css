@@ -949,9 +949,19 @@ input[type="number"] {
 }
 
 .search-view-game {
+    display: inline-block;
     color: #8b7cff;
     font-size: 14px;
     font-weight: 600;
+
+    opacity: 0;
+    transform: translateY(5px);
+    transition: 0.2s ease;
+}
+
+.search-game-card:hover .search-view-game {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .search-empty {

@@ -182,3 +182,18 @@ def search_games(request):
     return JsonResponse({
         'games': results
     })
+
+def search_results(request):
+    query = request.GET.get('q', '').strip()
+
+    if query:
+        games = Game.objects.filter(
+            title__icontains=query
+        )
+    else:
+        games = Game.objects.none()
+
+    return render(request, 'games/search_results.html', {
+        'games': games,
+        'query': query
+    })

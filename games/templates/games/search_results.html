@@ -1,0 +1,56 @@
+{% extends 'games/base.html' %}
+
+{% block title %}Search | GameHub{% endblock %}
+
+{% block content %}
+
+<section class="search-page">
+
+    <div class="search-page-header">
+        <p class="search-page-label">SEARCH RESULTS</p>
+
+        <h1>Results for "{{ query }}"</h1>
+
+        <p>
+            Find games that match your search.
+        </p>
+    </div>
+
+    <div class="search-page-grid">
+
+        {% for game in games %}
+
+            <a href="{% url 'game_detail' game.id %}" class="search-game-card">
+
+                <span class="game-genre">
+                    {{ game.genre }}
+                </span>
+
+                <h2>{{ game.title }}</h2>
+
+                <p>
+                    {{ game.developer }} • {{ game.release_year }}
+                </p>
+
+                <span class="search-view-game">
+                    View Game
+                </span>
+
+            </a>
+
+        {% empty %}
+
+            <div class="search-empty">
+                <h2>No games found</h2>
+                <p>
+                    We couldn't find any games matching "{{ query }}".
+                </p>
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
+{% endblock %}

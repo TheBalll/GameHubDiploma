@@ -43,4 +43,10 @@ urlpatterns = [
         views.search_games,
         name='search_games'
     ),
+
+    path(
+        'search/',
+        views.search_results,
+        name='search_results'
+    ),
 ]

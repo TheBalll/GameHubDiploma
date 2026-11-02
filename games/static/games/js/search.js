@@ -49,4 +49,17 @@ if (searchInput && searchResults) {
 
         searchResults.classList.add('active');
     });
+
+   searchInput.addEventListener('keydown', function (event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+
+        const query = searchInput.value.trim();
+
+        if (query.length > 0) {
+            window.location.href =
+                `/search/?q=${encodeURIComponent(query)}`;
+        }
+    }
+   });
 }

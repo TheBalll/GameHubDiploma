@@ -3,6 +3,7 @@ from .models import Game, Review, LibraryEntry
 from .forms import ReviewForm, LibraryEntryForm
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import authenticate, login, logout
+from django.http import JsonResponse
 
 def home(request):
     return render(request, 'games/home.html')
@@ -156,4 +157,28 @@ def edit_library_entry(request, game_id):
     return render(request, 'games/edit_library_entry.html', {
         'form': form,
         'library_entry': library_entry
+    })
+
+def search_games(request):
+    query = request.GET.get('q', '')
+
+    if query:
+        games = Game.objects.filter(
+            title__icontains=query
+        )[:5]
+    else:
+        games = []
+
+    results = []
+
+    for game in games:
+        results.append({
+            'id': game.id,
+            'title': game.title,
+            'genre': game.genre,
+            'release_year': game.release_year
+        })
+
+    return JsonResponse({
+        'games': results
     })

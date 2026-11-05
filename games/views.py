@@ -3,9 +3,10 @@ from .models import Game, Review, LibraryEntry
 from .forms import ReviewForm, LibraryEntryForm
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import authenticate, login, logout
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseForbidden
 
 def home(request):
     return render(request, 'games/home.html')
@@ -82,18 +83,25 @@ def logout_view(request):
     return redirect('home')
 
 
+
+
+@login_required
 @require_POST
 def delete_review(request, review_id):
-    review = get_object_or_404(
-        Review,
-        id=review_id,
-        user=request.user
-    )
+    review = get_object_or_404(Review, id=review_id)
+
+    if review.user != request.user and not request.user.is_staff:
+        return HttpResponseForbidden("You cannot delete this review.")
 
     game_id = review.game.id
     review.delete()
 
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return JsonResponse({"success": True})
+
     return redirect('game_detail', game_id=game_id)
+
+
 
 @login_required
 def edit_review(request, review_id):

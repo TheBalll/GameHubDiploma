@@ -4,6 +4,8 @@ from .forms import ReviewForm, LibraryEntryForm
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
 
 def home(request):
     return render(request, 'games/home.html')
@@ -79,16 +81,41 @@ def logout_view(request):
     logout(request)
     return redirect('home')
 
+
+@require_POST
 def delete_review(request, review_id):
-    review = get_object_or_404(Review, id=review_id)
+    review = get_object_or_404(
+        Review,
+        id=review_id,
+        user=request.user
+    )
 
-    if review.user == request.user:
-        game_id = review.game.id
-        review.delete()
+    game_id = review.game.id
+    review.delete()
 
-        return redirect('game_detail', game_id=game_id)
+    return redirect('game_detail', game_id=game_id)
 
-    return redirect('game_detail', game_id=review.game.id)
+@login_required
+def edit_review(request, review_id):
+    review = get_object_or_404(
+        Review,
+        id=review_id,
+        user=request.user
+    )
+
+    if request.method == 'POST':
+        form = ReviewForm(request.POST, instance=review)
+
+        if form.is_valid():
+            form.save()
+            return redirect('game_detail', game_id=review.game.id)
+    else:
+        form = ReviewForm(instance=review)
+
+    return render(request, 'games/edit_review.html', {
+        'form': form,
+        'review': review
+    })
 
 def library(request):
     if not request.user.is_authenticated:
@@ -115,6 +142,8 @@ def add_to_library(request, game_id):
 
     return redirect('library')
 
+
+@require_POST
 def remove_from_library(request, game_id):
     if not request.user.is_authenticated:
         return redirect('login')
@@ -128,6 +157,7 @@ def remove_from_library(request, game_id):
     library_entry.delete()
 
     return redirect('library')
+
 
 def edit_library_entry(request, game_id):
     if not request.user.is_authenticated:

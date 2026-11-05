@@ -49,4 +49,6 @@ urlpatterns = [
         views.search_results,
         name='search_results'
     ),
+
+    path('reviews/<int:review_id>/edit/', views.edit_review, name='edit_review'),
 ]

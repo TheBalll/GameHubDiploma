@@ -13,9 +13,7 @@
 
             <h1>Edit {{ library_entry.game.title }}</h1>
 
-            <p>
-                Update your game status and hours played.
-            </p>
+           <p>Update your game status.</p>
         </div>
 
         <form method="POST" class="auth-form">
@@ -31,14 +29,6 @@
                 {{ form.status.errors }}
             </div>
 
-            <div class="auth-field">
-                <label for="{{ form.hours_played.id_for_label }}">
-                    Hours Played
-                </label>
-
-                {{ form.hours_played }}
-                {{ form.hours_played.errors }}
-            </div>
 
             <button type="submit" class="auth-submit-btn">
                 Save Changes

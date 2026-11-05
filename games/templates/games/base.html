@@ -16,16 +16,33 @@
    <!-- NAVBAR -->
 <nav class="navbar">
 
-    <a href="/" class="logo">
-         GameHub
+   <a href="{% url 'home' %}" class="logo">
+    <span class="logo-icon">G</span>
+    <span class="logo-text">GameHub</span>
+   </a>
+
+   
+<div class="nav-links">
+    <a href="{% url 'home' %}"
+       class="{% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+        Home
     </a>
 
-    <div class="nav-links">
-        <a href="/">Home</a>
-        <a href="{% url 'games_list' %}">Games</a>
-        <a href="#">Community</a>
-        <a href="{% url 'library' %}">My Library</a>
-    </div>
+    <a href="{% url 'games_list' %}"
+       class="{% if request.resolver_match.url_name == 'games_list' %}active{% endif %}">
+        Games
+    </a>
+
+    <a href="#" class="nav-community">
+        Community
+    </a>
+
+    <a href="{% url 'library' %}"
+       class="{% if request.resolver_match.url_name == 'library' %}active{% endif %}">
+        My Library
+    </a>
+</div>
+
 
     <div class="nav-right">
       <div class="search-container">

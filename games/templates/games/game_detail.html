@@ -1,3 +1,4 @@
+
 {% extends 'games/base.html' %}
 
 {% block title %}{{ game.title }} | GameHub{% endblock %}
@@ -33,72 +34,108 @@
         </div>
 
         {% if user.is_authenticated %}
-     <a href="{% url 'add_to_library' game.id %}" class="add-library-btn">
-        Add to Library
-     </a>
+            <a href="{% url 'add_to_library' game.id %}"
+               class="add-library-btn">
+                Add to Library
+            </a>
         {% else %}
-     <a href="{% url 'login' %}" class="add-library-btn">
-        Login to Add to Library
-     </a>
-     {% endif %}
+            <a href="{% url 'login' %}"
+               class="add-library-btn">
+                Login to Add to Library
+            </a>
+        {% endif %}
 
     </div>
 
-<div class="reviews-section">
+    <div class="reviews-section">
 
-    <h2>Reviews</h2>
+        <h2>Reviews</h2>
 
-    {% for review in reviews %}
+        {% for review in reviews %}
 
-        <div class="review-card">
+            <div class="review-card">
 
-            <div class="review-header">
-                <strong>{{ review.user.username }}</strong>
-                <span>{{ review.rating }}/10</span>
+                <div class="review-header">
+                    <strong>{{ review.user.username }}</strong>
+                    <span>{{ review.rating }}/10</span>
+                </div>
+
+                <p>{{ review.comment }}</p>
+
+                <small>
+                    {{ review.created_at|date:"d M Y" }}
+                </small>
+
+                {% if user.is_authenticated and review.user_id == user.id %}
+
+                    <div class="review-actions">
+
+                        <a href="{% url 'edit_review' review.id %}"
+                           class="edit-review-btn">
+                            Edit
+                        </a>
+
+                        <form method="post"
+                              action="{% url 'delete_review' review.id %}">
+
+                            {% csrf_token %}
+
+                            <button type="submit"
+                                    class="delete-review-btn">
+                                Delete
+                            </button>
+
+                        </form>
+
+                    </div>
+
+                {% endif %}
+
             </div>
 
-            <p>{{ review.comment }}</p>
+        {% empty %}
 
-            <small>
-                {{ review.created_at|date:"d M Y" }}
-            </small>
-            {% if user == review.user %}
+            <p class="no-reviews">
+                No reviews yet.
+            </p>
 
-               <a href="{% url 'delete_review' review.id %}" class="delete-review-btn">
-                 Delete
-               </a>
+        {% endfor %}
 
-            {% endif %}
+    </div>
 
-        </div>
+    <div class="add-review-section">
 
-    {% empty %}
+        <h2>Add Review</h2>
 
-        <p class="no-reviews">
-            No reviews yet.
-        </p>
+        {% if user.is_authenticated %}
 
-    {% endfor %}
+            <form method="post">
 
-</div>
+                {% csrf_token %}
 
-<div class="add-review-section">
+                {{ form.as_p }}
 
-    <h2>Add Review</h2>
+                <button type="submit"
+                        class="review-submit-btn">
+                    Submit Review
+                </button>
 
-    <form method="POST">
+            </form>
 
-        {% csrf_token %}
+        {% else %}
 
-        {{ form.as_p }}
+            <p>
+                You need to log in to write a review.
+            </p>
 
-        <button type="submit" class="review-submit-btn">
-            Submit Review
-        </button>
+            <a href="{% url 'login' %}" class="add-library-btn">
+                Login to Review
+            </a>
 
-    </form>
+        {% endif %}
 
-</div>
+    </div>
+
 </section>
 
 {% endblock %}

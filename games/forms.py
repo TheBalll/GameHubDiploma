@@ -15,8 +15,4 @@ class ReviewForm(forms.ModelForm):
 class LibraryEntryForm(forms.ModelForm):
     class Meta:
         model = LibraryEntry
-
-        fields = [
-            'status',
-            'hours_played'
-        ]
+        fields = ['status']

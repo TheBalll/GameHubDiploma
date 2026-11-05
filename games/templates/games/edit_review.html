@@ -1,0 +1,43 @@
+
+{% extends 'games/base.html' %}
+
+{% block title %}Edit Review | GameHub{% endblock %}
+
+{% block content %}
+<section class="auth-section">
+    <div class="auth-card">
+        <h1>Edit Review</h1>
+        <p>Update your review for {{ review.game.title }}.</p>
+
+        <form method="post">
+            {% csrf_token %}
+
+            {{ form.non_field_errors }}
+
+            <div class="auth-field">
+                <label for="{{ form.rating.id_for_label }}">
+                    Rating (1-10)
+                </label>
+                {{ form.rating }}
+                {{ form.rating.errors }}
+            </div>
+
+            <div class="auth-field">
+                <label for="{{ form.comment.id_for_label }}">
+                    Review
+                </label>
+                {{ form.comment }}
+                {{ form.comment.errors }}
+            </div>
+
+            <button type="submit" class="auth-btn">
+                Save Changes
+            </button>
+        </form>
+
+        <a href="{% url 'game_detail' review.game.id %}">
+            Back to Game
+        </a>
+    </div>
+</section>
+{% endblock %}

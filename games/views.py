@@ -7,6 +7,7 @@ from django.http import JsonResponse, HttpResponseForbidden
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
+from django.urls import reverse
 
 def home(request):
     return render(request, 'games/home.html')
@@ -35,7 +36,7 @@ def game_detail(request, game_id):
 
             review.save()
 
-            return redirect('game_detail', game_id=game.id)
+            return redirect(reverse('game_detail', kwargs={'game_id': game.id}) + '#reviews')
 
     else:
         form = ReviewForm()
@@ -116,7 +117,7 @@ def edit_review(request, review_id):
 
         if form.is_valid():
             form.save()
-            return redirect('game_detail', game_id=review.game.id)
+            return redirect(reverse('game_detail', kwargs={'game_id': review.game.id}) + '#reviews')
     else:
         form = ReviewForm(instance=review)
 

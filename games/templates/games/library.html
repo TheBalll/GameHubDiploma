@@ -6,50 +6,194 @@
 {% block content %}
 
 <section class="library-section">
+
     <div class="library-header">
         <p class="library-label">YOUR COLLECTION</p>
         <h1>My Library</h1>
-        <p>Keep track of the games you play.</p>
+        <p>Track your progress and manage your games.</p>
     </div>
 
-    <div class="library-grid">
+    <!-- LIBRARY STATISTICS -->
+    <div class="library-stats">
+
+        <div class="library-stat-card">
+            <span id="totalGames">{{ library_entries|length }}</span>
+            <p>Total Games</p>
+        </div>
+
+        <div class="library-stat-card">
+            <span id="playingGames">0</span>
+            <p>Playing</p>
+        </div>
+
+        <div class="library-stat-card">
+            <span id="completedGames">0</span>
+            <p>Completed</p>
+        </div>
+
+    </div>
+
+    <!-- STATUS FILTERS -->
+    <div class="library-filters">
+        <button type="button"
+                class="library-filter active"
+                data-filter="all">
+            All Games
+        </button>
+
+        <button type="button"
+                class="library-filter"
+                data-filter="playing">
+            Playing
+        </button>
+
+        <button type="button"
+                class="library-filter"
+                data-filter="completed">
+            Completed
+        </button>
+
+        <button type="button"
+                class="library-filter"
+                data-filter="plan_to_play">
+            Plan to Play
+        </button>
+
+        <button type="button"
+                class="library-filter"
+                data-filter="dropped">
+            Dropped
+        </button>
+    </div>
+
+    <!-- GAME CARDS -->
+    <div class="library-grid" id="libraryGrid">
+
         {% for entry in library_entries %}
-            <div class="library-card">
-                <span class="game-genre">
-                    {{ entry.game.genre }}
-                </span>
 
-                <h2>{{ entry.game.title }}</h2>
+            <div class="library-card"
+                 data-status="{{ entry.status }}">
 
+                <div class="library-card-content">
+
+                    <span class="game-genre">
+                        {{ entry.game.genre }}
+                    </span>
+
+                    <h2>{{ entry.game.title }}</h2>
+
+                    <span class="library-status">
+                        {{ entry.get_status_display }}
+                    </span>
+
+                    <div class="library-actions">
+
+                        <a href="{% url 'edit_library_entry' entry.game.id %}"
+                           class="edit-library-btn">
+                            Edit
+                        </a>
+
+                        <a href="{% url 'game_detail' entry.game.id %}"
+                           class="details-btn">
+                            View Details
+                        </a>
+
+                        <form method="post"
+                              action="{% url 'remove_from_library' entry.game.id %}">
+                            {% csrf_token %}
+
+                            <button type="submit"
+                                    class="remove-library-btn">
+                                Remove
+                            </button>
+                        </form>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        {% empty %}
+
+            <div class="library-empty">
+                <h2>Your library is empty</h2>
                 <p>
-                    <strong>Status:</strong>
-                    {{ entry.get_status_display }}
+                    Start exploring games and add your favorites
+                    to your collection.
                 </p>
 
-                <div class="library-actions">
-                    <a href="{% url 'edit_library_entry' entry.game.id %}"
-                       class="edit-library-btn">
-                        Edit
-                    </a>
-
-                    <a href="{% url 'game_detail' entry.game.id %}"
-                       class="details-btn">
-                        View Details
-                    </a>
-
-                    <form method="post"
-                          action="{% url 'remove_from_library' entry.game.id %}">
-                        {% csrf_token %}
-                        <button type="submit" class="remove-library-btn">
-                            Remove
-                        </button>
-                    </form>
-                </div>
+                <a href="{% url 'games_list' %}"
+                   class="library-explore-btn">
+                    Explore Games
+                </a>
             </div>
-        {% empty %}
-            <p>Your library is empty.</p>
+
         {% endfor %}
+
     </div>
+
+    <p id="libraryNoResults"
+       class="library-no-results"
+       hidden>
+        No games found with this status.
+    </p>
+
 </section>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const cards = document.querySelectorAll(".library-card");
+    const filterButtons = document.querySelectorAll(".library-filter");
+    const noResults = document.getElementById("libraryNoResults");
+
+    const playingCount = document.getElementById("playingGames");
+    const completedCount = document.getElementById("completedGames");
+
+    playingCount.textContent = [...cards].filter(
+        card => card.dataset.status === "playing"
+    ).length;
+
+    completedCount.textContent = [...cards].filter(
+        card => card.dataset.status === "completed"
+    ).length;
+
+    filterButtons.forEach(button => {
+
+        button.addEventListener("click", function () {
+
+            const selectedFilter = button.dataset.filter;
+            let visibleCount = 0;
+
+            filterButtons.forEach(btn => {
+                btn.classList.remove("active");
+            });
+
+            button.classList.add("active");
+
+            cards.forEach(card => {
+
+                const shouldShow =
+                    selectedFilter === "all" ||
+                    card.dataset.status === selectedFilter;
+
+                card.hidden = !shouldShow;
+
+                if (shouldShow) {
+                    visibleCount++;
+                }
+
+            });
+
+            noResults.hidden =
+                visibleCount > 0 || cards.length === 0;
+
+        });
+
+    });
+
+});
+</script>
 
 {% endblock %}

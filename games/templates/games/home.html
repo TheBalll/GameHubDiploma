@@ -1,26 +1,59 @@
+
 {% extends 'games/base.html' %}
+{% load static %}
 
 {% block title %}Home | GameHub{% endblock %}
 
 {% block content %}
 
-<section class="hero">
+<section class="hero-banner">
 
-    <div class="hero-content">
+    <!-- MAIN CONTENT -->
+    <div class="hero-banner-content">
 
-        <p class="hero-label">YOUR GAMING COMMUNITY</p>
-
-        <h1>Welcome to <span>GameHub</span></h1>
-
-        <p class="hero-description">
-            Discover games, share your reviews and connect with other gamers.
-             Every great game has a story. Share yours.
+        <p class="hero-banner-label">
+            YOUR NEXT ADVENTURE STARTS HERE
         </p>
 
-        <div class="hero-buttons">
-            <a href="{% url 'games_list' %}" class="primary-btn">Explore Games</a>
-            <a href="#" class="secondary-btn">Join Community</a>
+        <h1>
+            Welcome to <span>GameHub.</span><br>
+            Your world. Your games.
+        </h1>
+
+        <p class="hero-banner-description">
+            Discover games, share your reviews and connect with
+            other gamers. Every great game has a story.
+            Share yours.
+        </p>
+
+        <!-- BUTTONS -->
+        <div class="hero-banner-buttons">
+
+            <a href="{% url 'games_list' %}" class="primary-btn">
+                Explore Games ↗
+            </a>
+
+            <a href="#" class="secondary-btn">
+                Join Community →
+            </a>
+
         </div>
+
+        <!-- COMMUNITY TEXT -->
+        <div class="hero-banner-community">
+            <p>Good games. Great company.</p>
+        </div>
+
+    </div>
+
+    <!-- FEATURED GAME -->
+    <div class="hero-banner-featured">
+
+        <small>FEATURED WORLD</small>
+
+        <h3>Elden Ring</h3>
+
+        <p>The Lands Between await. ↗</p>
 
     </div>
 

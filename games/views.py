@@ -235,3 +235,23 @@ def search_results(request):
         'games': games,
         'query': query
     })
+
+    
+@login_required
+def profile(request):
+    user_reviews = Review.objects.filter(
+        user=request.user
+    ).select_related("game").order_by("-created_at")
+
+    library_entries = LibraryEntry.objects.filter(
+        user=request.user
+    ).select_related("game")
+
+    context = {
+        "user_reviews": user_reviews,
+        "library_entries": library_entries,
+        "reviews_count": user_reviews.count(),
+        "games_count": library_entries.count()
+    }
+
+    return render(request, "games/profile.html", context)

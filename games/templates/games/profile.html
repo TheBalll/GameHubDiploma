@@ -1,0 +1,95 @@
+
+{% extends 'games/base.html' %}
+
+{% block title %}My Profile | GameHub{% endblock %}
+
+{% block content %}
+
+<section class="profile-page">
+
+    <div class="profile-header">
+        <div class="profile-avatar">
+            {{ user.username|first|upper }}
+        </div>
+
+        <div class="profile-info">
+            <p class="profile-label">MY PROFILE</p>
+            <h1>{{ user.username }}</h1>
+            <p>GameHub Member</p>
+            <p class="profile-joined">
+                Joined {{ user.date_joined|date:"d M Y" }}
+            </p>
+        </div>
+    </div>
+
+    <div class="profile-stats">
+        <div class="profile-stat-card">
+            <span>{{ games_count }}</span>
+            <p>Games in Library</p>
+        </div>
+
+        <div class="profile-stat-card">
+            <span>{{ reviews_count }}</span>
+            <p>Reviews Written</p>
+        </div>
+    </div>
+
+    <div class="profile-section">
+        <div class="profile-section-header">
+            <h2>My Game Library</h2>
+            <a href="{% url 'library' %}">View Library</a>
+        </div>
+
+        <div class="profile-items">
+            {% for entry in library_entries %}
+                <div class="profile-item">
+                    <h3>
+                        <a href="{% url 'game_detail' entry.game.id %}">
+                            {{ entry.game.title }}
+                        </a>
+                    </h3>
+                    <p>{{ entry.get_status_display }}</p>
+                </div>
+            {% empty %}
+                <p class="profile-empty">
+                    You haven't added any games yet.
+                </p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="profile-section">
+        <div class="profile-section-header">
+            <h2>My Reviews</h2>
+        </div>
+
+        <div class="profile-items">
+            {% for review in user_reviews %}
+                <div class="profile-item">
+                    <h3>
+                        <a href="{% url 'game_detail' review.game.id %}">
+                            {{ review.game.title }}
+                        </a>
+                    </h3>
+
+                    <span class="profile-rating">
+                        {{ review.rating }}/10
+                    </span>
+
+                    <p>{{ review.comment }}</p>
+
+                    <small>
+                        {{ review.created_at|date:"d M Y" }}
+                    </small>
+                </div>
+            {% empty %}
+                <p class="profile-empty">
+                    You haven't written any reviews yet.
+                </p>
+            {% endfor %}
+        </div>
+    </div>
+
+</section>
+
+{% endblock %}

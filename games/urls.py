@@ -18,6 +18,8 @@ urlpatterns = [
         name='delete_review'
     ),
 
+    path('profile/', views.profile, name='profile'),
+    
     path('library/', views.library, name='library'),
 
     path(

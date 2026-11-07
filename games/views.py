@@ -8,6 +8,9 @@ from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
 from django.urls import reverse
+from django.contrib.auth.models import User
+from django.shortcuts import get_object_or_404, render
+from django.core.exceptions import PermissionDenied
 
 def home(request):
     return render(request, 'games/home.html')
@@ -285,3 +288,56 @@ def edit_profile(request):
     return render(request, 'games/edit_profile.html', {
         'profile_form': profile_form
     })
+
+    
+@login_required
+def public_profile(request, user_id):
+    # Намираме потребителя, чийто профил искаме да отворим
+    profile_user = get_object_or_404(User, id=user_id)
+
+    # Извличаме допълнителната информация за профила
+    user_profile = UserProfile.objects.filter(
+        user=profile_user
+    ).first()
+
+    # Извличаме ревютата на потребителя
+    user_reviews = Review.objects.filter(
+        user=profile_user
+    ).select_related("game").order_by("-created_at")
+
+    # Извличаме игрите от неговата библиотека
+    library_entries = LibraryEntry.objects.filter(
+        user=profile_user
+    ).select_related("game")
+
+    context = {
+        "profile_user": profile_user,
+        "user_profile": user_profile,
+        "user_reviews": user_reviews,
+        "library_entries": library_entries,
+        "reviews_count": user_reviews.count(),
+        "games_count": library_entries.count()
+    }
+
+    return render(request, "games/public_profile.html", context)
+
+
+@login_required
+@require_POST
+def delete_review_from_profile(request, review_id):
+
+    # Проверяваме дали потребителят има право да трие ревюта
+    if not request.user.has_perm('games.delete_review'):
+        raise PermissionDenied
+
+    # Намираме ревюто
+    review = get_object_or_404(Review, id=review_id)
+
+    # Запазваме ID на автора преди изтриването
+    profile_user_id = review.user_id
+
+    # Изтриваме ревюто
+    review.delete()
+
+    # Връщаме администратора в публичния профил
+    return redirect('public_profile', user_id=profile_user_id)

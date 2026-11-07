@@ -2380,3 +2380,56 @@ input[type="number"] {
         gap: 18px;
     }
 }
+
+/* REVIEW AUTHOR PROFILE LINK */
+
+.review-author-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.review-author-link strong {
+    color: #ffffff;
+    transition: color 0.2s ease;
+}
+
+.review-author-link:hover strong {
+    color: #a78bfa;
+}
+
+.review-author-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+
+    padding: 0;
+    overflow: hidden;
+
+    border-radius: 50%;
+    background: #7357ff;
+
+    color: #ffffff;
+    font-size: 17px;
+    font-weight: 700;
+}
+
+.review-author-avatar img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.review-author-link:focus-visible {
+    outline: 2px solid #a78bfa;
+    outline-offset: 4px;
+    border-radius: 6px;
+}

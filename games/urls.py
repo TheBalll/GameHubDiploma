@@ -55,4 +55,7 @@ urlpatterns = [
 
     path('reviews/<int:review_id>/edit/', views.edit_review, name='edit_review'),
 
+    path('users/<int:user_id>/', views.public_profile, name='public_profile'),
+   
+    path('reviews/<int:review_id>/delete-from-profile/',views.delete_review_from_profile,name='delete_review_from_profile'),
 ]

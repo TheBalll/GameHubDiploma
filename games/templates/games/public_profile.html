@@ -1,0 +1,367 @@
+
+{% extends 'games/base.html' %}
+
+{% block title %}
+    {{ user_profile.profile_name|default:profile_user.username }} | GameHub
+{% endblock %}
+
+{% block content %}
+
+<section class="profile-page">
+
+    <!-- PUBLIC PROFILE HEADER -->
+    <div class="profile-header">
+
+        <!-- PROFILE AVATAR -->
+        <div class="profile-avatar">
+
+            {% if user_profile.avatar %}
+
+                <img
+                    src="{{ user_profile.avatar.url }}"
+                    alt="Profile picture"
+                    class="profile-avatar-image"
+                >
+
+            {% elif user_profile.profile_name %}
+
+                {{ user_profile.profile_name|first|upper }}
+
+            {% else %}
+
+                {{ profile_user.username|first|upper }}
+
+            {% endif %}
+
+        </div>
+
+        <!-- PROFILE INFORMATION -->
+        <div class="profile-info">
+
+            <p class="profile-label">PLAYER PROFILE</p>
+
+            <!-- PROFILE NAME -->
+            <h1>
+                {{ user_profile.profile_name|default:profile_user.username }}
+            </h1>
+
+            <!-- LOGIN USERNAME -->
+            <p class="profile-username">
+                @{{ profile_user.username }}
+            </p>
+
+            <!-- BIO -->
+            {% if user_profile.bio %}
+
+                <p class="profile-bio">
+                    {{ user_profile.bio }}
+                </p>
+
+            {% else %}
+
+                <p class="profile-bio">
+                    GameHub Member
+                </p>
+
+            {% endif %}
+
+            <!-- JOIN DATE -->
+            <p class="profile-joined">
+                Joined {{ profile_user.date_joined|date:"d M Y" }}
+            </p>
+
+            <!-- EDIT PROFILE - OWNER ONLY -->
+            {% if user.id == profile_user.id %}
+
+                <a href="{% url 'edit_profile' %}"
+                   class="profile-edit-btn">
+                    Edit Profile
+                </a>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+    <!-- PROFILE STATISTICS -->
+    <div class="profile-stats">
+
+        <div class="profile-stat-card">
+            <span>{{ games_count }}</span>
+            <p>Games in Library</p>
+        </div>
+
+        <div class="profile-stat-card">
+            <span>{{ reviews_count }}</span>
+            <p>Reviews Written</p>
+        </div>
+
+    </div>
+
+
+    <!-- GAME LIBRARY -->
+    <div class="profile-section">
+
+        <div class="profile-section-header">
+            <h2>Game Library</h2>
+        </div>
+
+        <div class="profile-items">
+
+            {% for entry in library_entries %}
+
+                <div class="profile-item">
+
+                    <h3>
+                        <a href="{% url 'game_detail' entry.game.id %}">
+                            {{ entry.game.title }}
+                        </a>
+                    </h3>
+
+                    <p>
+                        {{ entry.get_status_display }}
+                    </p>
+
+                </div>
+
+            {% empty %}
+
+                <p class="profile-empty">
+                    No games in this library yet.
+                </p>
+
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+
+    <!-- USER REVIEWS -->
+    <div class="profile-section">
+
+        <div class="profile-section-header">
+            <h2>Reviews</h2>
+        </div>
+
+        <div class="profile-items">
+
+            {% for review in user_reviews %}
+
+                <div class="profile-item">
+
+                    <!-- GAME TITLE -->
+                    <h3>
+                        <a href="{% url 'game_detail' review.game.id %}#reviews">
+                            {{ review.game.title }}
+                        </a>
+                    </h3>
+
+                    <!-- RATING -->
+                    <span class="profile-rating">
+                        {{ review.rating }}/10
+                    </span>
+
+                    <!-- REVIEW COMMENT -->
+                    <p>
+                        {{ review.comment }}
+                    </p>
+
+                    <!-- REVIEW DATE -->
+                    <small>
+                        {{ review.created_at|date:"d M Y" }}
+                    </small>
+
+
+                    <!-- ADMIN REVIEW ACTIONS -->
+                    {% if perms.games.delete_review %}
+
+                        <div class="review-actions">
+
+                            <form
+                                method="post"
+                                action="{% url 'delete_review_from_profile' review.id %}"
+                            >
+
+                                {% csrf_token %}
+
+                                <button
+                                    type="button"
+                                    class="delete-review-btn"
+                                    onclick="openProfileDeleteModal(this)"
+                                >
+                                    Delete Review
+                                </button>
+
+                            </form>
+
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+            {% empty %}
+
+                <p class="profile-empty">
+                    No reviews written yet.
+                </p>
+
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- DELETE REVIEW MODAL -->
+<div
+    id="profileDeleteModal"
+    class="delete-modal-overlay"
+    hidden
+>
+
+    <div
+        class="delete-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="profileDeleteTitle"
+        aria-describedby="profileDeleteDescription"
+    >
+
+        <div class="delete-modal-icon">!</div>
+
+        <h2 id="profileDeleteTitle">
+            Delete Review
+        </h2>
+
+        <p id="profileDeleteDescription">
+            Are you sure you want to delete this review?
+            This action cannot be undone.
+        </p>
+
+        <div class="delete-modal-actions">
+
+            <button
+                type="button"
+                class="delete-modal-cancel"
+                onclick="closeProfileDeleteModal()"
+            >
+                Cancel
+            </button>
+
+            <button
+                type="button"
+                class="delete-modal-confirm"
+                id="confirmProfileDelete"
+                onclick="confirmProfileDelete()"
+            >
+                Delete Review
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- DELETE REVIEW SCRIPT -->
+<script>
+
+    let selectedProfileReviewForm = null;
+    let lastProfileDeleteButton = null;
+
+    const profileDeleteModal = document.getElementById(
+        "profileDeleteModal"
+    );
+
+    const confirmProfileDeleteButton = document.getElementById(
+        "confirmProfileDelete"
+    );
+
+
+    // OPEN DELETE MODAL
+    function openProfileDeleteModal(button) {
+
+        selectedProfileReviewForm = button.closest("form");
+        lastProfileDeleteButton = button;
+
+        profileDeleteModal.hidden = false;
+
+        profileDeleteModal.querySelector(
+            ".delete-modal-cancel"
+        ).focus();
+
+    }
+
+
+    // CLOSE DELETE MODAL
+    function closeProfileDeleteModal() {
+
+        if (confirmProfileDeleteButton.disabled) {
+            return;
+        }
+
+        profileDeleteModal.hidden = true;
+        selectedProfileReviewForm = null;
+
+        if (lastProfileDeleteButton) {
+            lastProfileDeleteButton.focus();
+            lastProfileDeleteButton = null;
+        }
+
+    }
+
+
+    // CONFIRM DELETE REVIEW
+    function confirmProfileDelete() {
+
+        if (!selectedProfileReviewForm) {
+            return;
+        }
+
+        confirmProfileDeleteButton.disabled = true;
+        confirmProfileDeleteButton.textContent = "Deleting...";
+
+        // Submit the POST form with Django CSRF protection
+        selectedProfileReviewForm.requestSubmit();
+
+    }
+
+
+    // CLOSE MODAL WHEN CLICKING OUTSIDE
+    profileDeleteModal.addEventListener(
+        "click",
+        function(event) {
+
+            if (event.target === this) {
+                closeProfileDeleteModal();
+            }
+
+        }
+    );
+
+
+    // CLOSE MODAL WITH ESCAPE
+    document.addEventListener(
+        "keydown",
+        function(event) {
+
+            if (
+                event.key === "Escape" &&
+                !profileDeleteModal.hidden
+            ) {
+                closeProfileDeleteModal();
+            }
+
+        }
+    );
+
+</script>
+
+{% endblock %}

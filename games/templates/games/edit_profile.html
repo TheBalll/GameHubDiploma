@@ -1,3 +1,4 @@
+
 {% extends 'games/base.html' %}
 
 {% block title %}Edit Profile | GameHub{% endblock %}
@@ -18,32 +19,124 @@
 
             {% csrf_token %}
 
-          <div class="edit-profile-field">
-               <label for="{{ profile_form.profile_name.id_for_label }}">
-                 Profile Name
-               </label>
-               
+            {{ profile_form.non_field_errors }}
+
+            <!-- PROFILE NAME -->
+            <div class="edit-profile-field">
+                <label for="{{ profile_form.profile_name.id_for_label }}">
+                    Profile Name
+                </label>
+
                 {{ profile_form.profile_name }}
                 {{ profile_form.profile_name.errors }}
-         </div>
+            </div>
 
+            <!-- BIO -->
             <div class="edit-profile-field">
                 <label for="{{ profile_form.bio.id_for_label }}">
                     Bio
                 </label>
+
                 {{ profile_form.bio }}
                 {{ profile_form.bio.errors }}
             </div>
 
+            <!-- PROFILE PICTURE -->
             <div class="edit-profile-field">
-                <label for="{{ profile_form.avatar.id_for_label }}">
-                    Profile Picture
-                </label>
-                {{ profile_form.avatar }}
+
+                <label>Profile Picture</label>
+
+                <div class="avatar-upload">
+
+                    <div class="avatar-upload-preview">
+
+                        <img
+                            id="avatarPreviewImage"
+                            {% if profile_form.instance.avatar %}
+                                src="{{ profile_form.instance.avatar.url }}"
+                            {% else %}
+                                hidden
+                            {% endif %}
+                            alt="Profile picture preview"
+                        >
+
+                        <span
+                            id="avatarPreviewLetter"
+                            {% if profile_form.instance.avatar %}hidden{% endif %}
+                        >
+                            {{ profile_form.instance.profile_name|default:user.username|first|upper }}
+                        </span>
+
+                    </div>
+
+                    <div class="avatar-upload-content">
+
+                        <p class="avatar-upload-title">
+                            Your Profile Picture
+                        </p>
+
+                        <p class="avatar-upload-description">
+                            Choose an image for your GameHub profile.
+                        </p>
+
+                        <div class="avatar-upload-actions">
+
+                            <!-- UPLOAD / CHANGE -->
+                            <input
+                                type="file"
+                                id="id_avatar"
+                                name="{{ profile_form.avatar.html_name }}"
+                                accept="image/jpeg,image/png,image/webp"
+                                class="avatar-file-input"
+                            >
+
+                            <label
+                                for="id_avatar"
+                                class="avatar-upload-btn"
+                            >
+                                Change Picture
+                            </label>
+
+                            <!-- REMOVE CURRENT PICTURE -->
+                            {% if profile_form.instance.avatar %}
+
+                                <input
+                                    type="checkbox"
+                                    id="id_avatar-clear"
+                                    name="{{ profile_form.avatar.html_name }}-clear"
+                                    class="avatar-clear-input"
+                                >
+
+                                <label
+                                    for="id_avatar-clear"
+                                    class="avatar-remove-btn"
+                                >
+                                    Remove Picture
+                                </label>
+
+                            {% endif %}
+
+                        </div>
+
+                        <p class="avatar-upload-hint" id="avatarFileName">
+                            JPG, PNG or WebP
+                        </p>
+
+                        <p class="avatar-upload-status"
+                           id="avatarUploadStatus"
+                           aria-live="polite"></p>
+
+                    </div>
+
+                </div>
+
                 {{ profile_form.avatar.errors }}
+
             </div>
 
+            <!-- ACTIONS -->
             <div class="edit-profile-actions">
+
                 <a href="{% url 'profile' %}"
                    class="edit-profile-cancel">
                     Cancel
@@ -53,6 +146,7 @@
                         class="edit-profile-save">
                     Save Changes
                 </button>
+
             </div>
 
         </form>
@@ -60,5 +154,70 @@
     </div>
 
 </section>
+
+<script>
+    const avatarInput = document.getElementById("id_avatar");
+    const avatarClear = document.getElementById("id_avatar-clear");
+    const avatarImage = document.getElementById("avatarPreviewImage");
+    const avatarLetter = document.getElementById("avatarPreviewLetter");
+    const avatarFileName = document.getElementById("avatarFileName");
+    const avatarStatus = document.getElementById("avatarUploadStatus");
+
+    const originalAvatar = avatarImage.getAttribute("src") || "";
+    let previewUrl = null;
+
+    function showOriginalAvatar() {
+        if (originalAvatar) {
+            avatarImage.src = originalAvatar;
+            avatarImage.hidden = false;
+            avatarLetter.hidden = true;
+        } else {
+            avatarImage.hidden = true;
+            avatarLetter.hidden = false;
+        }
+    }
+
+    avatarInput.addEventListener("change", function () {
+        const file = this.files[0];
+
+        if (!file) {
+            return;
+        }
+
+        if (avatarClear) {
+            avatarClear.checked = false;
+        }
+
+        if (previewUrl) {
+            URL.revokeObjectURL(previewUrl);
+        }
+
+        previewUrl = URL.createObjectURL(file);
+
+        avatarImage.src = previewUrl;
+        avatarImage.hidden = false;
+        avatarLetter.hidden = true;
+
+        avatarFileName.textContent = file.name;
+        avatarStatus.textContent = "New picture selected. Save to apply.";
+    });
+
+    if (avatarClear) {
+        avatarClear.addEventListener("change", function () {
+            if (this.checked) {
+                avatarInput.value = "";
+                avatarImage.hidden = true;
+                avatarLetter.hidden = false;
+
+                avatarFileName.textContent = "JPG, PNG or WebP";
+                avatarStatus.textContent =
+                    "Picture will be removed when you save.";
+            } else {
+                showOriginalAvatar();
+                avatarStatus.textContent = "";
+            }
+        });
+    }
+</script>
 
 {% endblock %}

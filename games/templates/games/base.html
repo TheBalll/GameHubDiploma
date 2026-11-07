@@ -80,14 +80,35 @@
                         aria-controls="profileDropdownMenu"
                         aria-haspopup="true">
 
+                        <!-- PROFILE AVATAR -->
                         <span class="nav-profile-avatar">
-                            {{ user.username|first|upper }}
+
+                            {% if user.profile.avatar %}
+
+                                <img
+                                    src="{{ user.profile.avatar.url }}"
+                                    alt="{{ user.profile.profile_name|default:user.username }}'s profile picture"
+                                    class="nav-profile-avatar-image"
+                                >
+
+                            {% elif user.profile.profile_name %}
+
+                                {{ user.profile.profile_name|first|upper }}
+
+                            {% else %}
+
+                                {{ user.username|first|upper }}
+
+                            {% endif %}
+
                         </span>
 
+                        <!-- PROFILE NAME -->
                         <span class="nav-profile-name">
-                            {{ user.username }}
+                            {{ user.profile.profile_name|default:user.username }}
                         </span>
 
+                        <!-- DROPDOWN ARROW -->
                         <svg
                             class="nav-profile-arrow"
                             width="16"
@@ -112,6 +133,7 @@
                         id="profileDropdownMenu"
                         hidden>
 
+                        <!-- MY PROFILE -->
                         <a href="{% url 'profile' %}"
                            class="profile-menu-link">
 
@@ -137,6 +159,7 @@
 
                         <div class="profile-menu-divider"></div>
 
+                        <!-- LOGOUT -->
                         <a href="{% url 'logout' %}"
                            class="profile-menu-link profile-dropdown-logout">
 

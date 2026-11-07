@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Game, Review, LibraryEntry
-from .forms import ReviewForm, LibraryEntryForm
+from .models import Game, Review, LibraryEntry, UserProfile
+from .forms import ReviewForm, LibraryEntryForm, UserProfileForm
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse, HttpResponseForbidden
@@ -240,6 +240,10 @@ def search_results(request):
     
 @login_required
 def profile(request):
+    user_profile, created = UserProfile.objects.get_or_create(
+        user=request.user
+    )
+
     user_reviews = Review.objects.filter(
         user=request.user
     ).select_related("game").order_by("-created_at")
@@ -249,6 +253,7 @@ def profile(request):
     ).select_related("game")
 
     context = {
+        "user_profile": user_profile,
         "user_reviews": user_reviews,
         "library_entries": library_entries,
         "reviews_count": user_reviews.count(),
@@ -256,3 +261,27 @@ def profile(request):
     }
 
     return render(request, "games/profile.html", context)
+
+@login_required
+def edit_profile(request):
+    user_profile, created = UserProfile.objects.get_or_create(
+        user=request.user
+    )
+
+    if request.method == 'POST':
+        profile_form = UserProfileForm(
+            request.POST,
+            request.FILES,
+            instance=user_profile
+        )
+
+        if profile_form.is_valid():
+            profile_form.save()
+            return redirect('profile')
+
+    else:
+        profile_form = UserProfileForm(instance=user_profile)
+
+    return render(request, 'games/edit_profile.html', {
+        'profile_form': profile_form
+    })

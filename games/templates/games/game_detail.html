@@ -56,7 +56,10 @@
             <div class="review-card" id="review-{{ review.id }}">
 
                 <div class="review-header">
-                    <strong>{{ review.user.username }}</strong>
+                    <strong>
+                        {{ review.user.profile.profile_name|default:review.user.username }}
+                    </strong>
+
                     <span>{{ review.rating }}/10</span>
                 </div>
 

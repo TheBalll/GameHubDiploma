@@ -7,22 +7,77 @@
 
 <section class="profile-page">
 
+    <!-- PROFILE HEADER -->
     <div class="profile-header">
+
+        <!-- PROFILE AVATAR -->
         <div class="profile-avatar">
-            {{ user.username|first|upper }}
+
+            {% if user_profile.avatar %}
+
+                <img
+                    src="{{ user_profile.avatar.url }}"
+                    alt="Profile picture"
+                    class="profile-avatar-image"
+                >
+
+            {% elif user_profile.profile_name %}
+
+                {{ user_profile.profile_name|first|upper }}
+
+            {% else %}
+
+                {{ user.username|first|upper }}
+
+            {% endif %}
+
         </div>
 
+        <!-- PROFILE INFORMATION -->
         <div class="profile-info">
+
             <p class="profile-label">MY PROFILE</p>
-            <h1>{{ user.username }}</h1>
-            <p>GameHub Member</p>
+
+            <!-- PROFILE NAME -->
+            <h1>
+                {% if user_profile.profile_name %}
+                    {{ user_profile.profile_name }}
+                {% else %}
+                    {{ user.username }}
+                {% endif %}
+            </h1>
+
+            <!-- LOGIN USERNAME -->
+            <p class="profile-username">
+                @{{ user.username }}
+            </p>
+
+            <!-- BIO -->
+            {% if user_profile.bio %}
+                <p class="profile-bio">{{ user_profile.bio }}</p>
+            {% else %}
+                <p class="profile-bio">GameHub Member</p>
+            {% endif %}
+
+            <!-- JOIN DATE -->
             <p class="profile-joined">
                 Joined {{ user.date_joined|date:"d M Y" }}
             </p>
+
+            <!-- EDIT PROFILE BUTTON -->
+            <a href="{% url 'edit_profile' %}"
+               class="profile-edit-btn">
+                Edit Profile
+            </a>
+
         </div>
+
     </div>
 
+
+    <!-- PROFILE STATISTICS -->
     <div class="profile-stats">
+
         <div class="profile-stat-card">
             <span>{{ games_count }}</span>
             <p>Games in Library</p>
@@ -32,40 +87,67 @@
             <span>{{ reviews_count }}</span>
             <p>Reviews Written</p>
         </div>
+
     </div>
 
+
+    <!-- MY GAME LIBRARY -->
     <div class="profile-section">
+
         <div class="profile-section-header">
+
             <h2>My Game Library</h2>
-            <a href="{% url 'library' %}">View Library</a>
+
+            <a href="{% url 'library' %}">
+                View Library
+            </a>
+
         </div>
 
         <div class="profile-items">
+
             {% for entry in library_entries %}
+
                 <div class="profile-item">
+
                     <h3>
                         <a href="{% url 'game_detail' entry.game.id %}">
                             {{ entry.game.title }}
                         </a>
                     </h3>
+
                     <p>{{ entry.get_status_display }}</p>
+
                 </div>
+
             {% empty %}
+
                 <p class="profile-empty">
                     You haven't added any games yet.
                 </p>
+
             {% endfor %}
+
         </div>
+
     </div>
 
+
+    <!-- MY REVIEWS -->
     <div class="profile-section">
+
         <div class="profile-section-header">
+
             <h2>My Reviews</h2>
+
         </div>
 
         <div class="profile-items">
+
             {% for review in user_reviews %}
+
                 <div class="profile-item">
+
                     <h3>
                         <a href="{% url 'game_detail' review.game.id %}">
                             {{ review.game.title }}
@@ -81,13 +163,19 @@
                     <small>
                         {{ review.created_at|date:"d M Y" }}
                     </small>
+
                 </div>
+
             {% empty %}
+
                 <p class="profile-empty">
                     You haven't written any reviews yet.
                 </p>
+
             {% endfor %}
+
         </div>
+
     </div>
 
 </section>

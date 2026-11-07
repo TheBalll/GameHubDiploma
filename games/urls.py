@@ -19,6 +19,7 @@ urlpatterns = [
     ),
 
     path('profile/', views.profile, name='profile'),
+    path('profile/edit/', views.edit_profile, name='edit_profile'),
     
     path('library/', views.library, name='library'),
 
@@ -53,4 +54,5 @@ urlpatterns = [
     ),
 
     path('reviews/<int:review_id>/edit/', views.edit_review, name='edit_review'),
+
 ]

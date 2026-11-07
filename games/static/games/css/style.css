@@ -2012,3 +2012,174 @@ input[type="number"] {
         gap: 8px;
     }
 }
+
+/* EDIT PROFILE PAGE */
+
+.edit-profile-page {
+    max-width: 750px;
+    margin: 60px auto;
+    padding: 0 20px;
+}
+
+.edit-profile-header {
+    margin-bottom: 30px;
+}
+
+.edit-profile-header h1 {
+    font-size: 36px;
+    margin: 10px 0;
+    color: #ffffff;
+}
+
+.edit-profile-header > p:last-child {
+    color: #a1a1b5;
+}
+
+.edit-profile-card {
+    background: #171722;
+    border: 1px solid #303044;
+    border-radius: 16px;
+    padding: 35px;
+}
+
+.edit-profile-field {
+    margin-bottom: 25px;
+}
+
+.edit-profile-field label {
+    display: block;
+    margin-bottom: 10px;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.edit-profile-field input[type="text"],
+.edit-profile-field textarea {
+    width: 100%;
+    padding: 13px 15px;
+    background: #101018;
+    color: #ffffff;
+    border: 1px solid #35354a;
+    border-radius: 8px;
+    font: inherit;
+    box-sizing: border-box;
+}
+
+.edit-profile-field textarea {
+    resize: vertical;
+}
+
+.edit-profile-field input:focus,
+.edit-profile-field textarea:focus {
+    outline: none;
+    border-color: #8b5cf6;
+}
+
+.edit-profile-field input[type="file"] {
+    max-width: 100%;
+    color: #a1a1b5;
+}
+
+.edit-profile-field .errorlist {
+    color: #ff7777;
+    margin-top: 8px;
+}
+
+.edit-profile-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+.edit-profile-cancel,
+.edit-profile-save {
+    padding: 12px 22px;
+    border-radius: 8px;
+    text-decoration: none;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.edit-profile-cancel {
+    background: #292936;
+    color: #ffffff;
+}
+
+.edit-profile-save {
+    background: #7357ff;
+    color: #ffffff;
+    border: none;
+}
+
+.edit-profile-save:hover {
+    background: #846cff;
+}
+
+@media (max-width: 600px) {
+    .edit-profile-card {
+        padding: 22px;
+    }
+
+    .edit-profile-header h1 {
+        font-size: 28px;
+    }
+}
+
+/* PROFILE - AVATAR, BIO AND EDIT BUTTON */
+
+.profile-avatar {
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.profile-avatar-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.profile-bio {
+    color: #b8b8cc;
+    line-height: 1.6;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+    max-width: 600px;
+}
+
+.profile-edit-btn {
+    display: inline-block;
+    width: fit-content;
+    margin-top: 16px;
+    padding: 11px 22px;
+    background: #7357ff;
+    color: #ffffff;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.profile-edit-btn:hover {
+    background: #846cff;
+    transform: translateY(-2px);
+}
+
+.profile-edit-btn:focus-visible {
+    outline: 2px solid #a78bfa;
+    outline-offset: 3px;
+}
+
+/* PROFILE USERNAME */
+
+.profile-username {
+    color: #9494aa;
+    font-size: 14px;
+    margin-top: 4px;
+    margin-bottom: 14px;
+}

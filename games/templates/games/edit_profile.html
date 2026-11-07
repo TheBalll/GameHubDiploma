@@ -1,0 +1,64 @@
+{% extends 'games/base.html' %}
+
+{% block title %}Edit Profile | GameHub{% endblock %}
+
+{% block content %}
+
+<section class="edit-profile-page">
+
+    <div class="edit-profile-header">
+        <p class="profile-label">ACCOUNT SETTINGS</p>
+        <h1>Edit Profile</h1>
+        <p>Customize your GameHub profile.</p>
+    </div>
+
+    <div class="edit-profile-card">
+
+        <form method="post" enctype="multipart/form-data">
+
+            {% csrf_token %}
+
+          <div class="edit-profile-field">
+               <label for="{{ profile_form.profile_name.id_for_label }}">
+                 Profile Name
+               </label>
+               
+                {{ profile_form.profile_name }}
+                {{ profile_form.profile_name.errors }}
+         </div>
+
+            <div class="edit-profile-field">
+                <label for="{{ profile_form.bio.id_for_label }}">
+                    Bio
+                </label>
+                {{ profile_form.bio }}
+                {{ profile_form.bio.errors }}
+            </div>
+
+            <div class="edit-profile-field">
+                <label for="{{ profile_form.avatar.id_for_label }}">
+                    Profile Picture
+                </label>
+                {{ profile_form.avatar }}
+                {{ profile_form.avatar.errors }}
+            </div>
+
+            <div class="edit-profile-actions">
+                <a href="{% url 'profile' %}"
+                   class="edit-profile-cancel">
+                    Cancel
+                </a>
+
+                <button type="submit"
+                        class="edit-profile-save">
+                    Save Changes
+                </button>
+            </div>
+
+        </form>
+
+    </div>
+
+</section>
+
+{% endblock %}

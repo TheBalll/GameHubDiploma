@@ -1,4 +1,6 @@
+
 {% extends 'games/base.html' %}
+{% load static %}
 
 {% block title %}Login | GameHub{% endblock %}
 
@@ -14,33 +16,52 @@
             <p>Continue your gaming journey.</p>
         </div>
 
-        <form method="POST" class="auth-form">
-
+        <form
+            method="post"
+            action="{% url 'login' %}"
+            class="auth-form"
+            id="loginForm"
+        >
             {% csrf_token %}
 
             <div class="auth-field">
                 <label for="username">Username</label>
+
                 <input
                     type="text"
                     name="username"
                     id="username"
                     placeholder="Enter your username"
+                    autocomplete="username"
                     required
                 >
             </div>
 
             <div class="auth-field">
                 <label for="password">Password</label>
+
                 <input
                     type="password"
                     name="password"
                     id="password"
                     placeholder="Enter your password"
+                    autocomplete="current-password"
                     required
                 >
             </div>
 
-            <button type="submit" class="auth-submit-btn">
+            <p
+                id="loginError"
+                class="auth-error"
+                role="alert"
+                {% if not error %}hidden{% endif %}
+            >{{ error|default:'' }}</p>
+
+            <button
+                type="submit"
+                class="auth-submit-btn"
+                id="loginButton"
+            >
                 Login
             </button>
 
@@ -54,5 +75,7 @@
     </div>
 
 </section>
+
+<script src="{% static 'games/js/login.js' %}" defer></script>
 
 {% endblock %}

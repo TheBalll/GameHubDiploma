@@ -1,4 +1,6 @@
+
 {% extends 'games/base.html' %}
+{% load static %}
 
 {% block title %}Register | GameHub{% endblock %}
 
@@ -14,29 +16,100 @@
             <p>Create your account and start your gaming journey.</p>
         </div>
 
-        <form method="POST" class="auth-form">
+        <!-- REGISTER FORM -->
+        <form
+            method="post"
+            action="{% url 'register' %}"
+            class="auth-form"
+            id="registerForm"
+        >
 
             {% csrf_token %}
 
+            <!-- USERNAME -->
             <div class="auth-field">
-                <label for="{{ form.username.id_for_label }}">Username</label>
+
+                <label for="{{ form.username.id_for_label }}">
+                    Username
+                </label>
+
                 {{ form.username }}
-                {{ form.username.errors }}
+
+                <p
+                    class="auth-error"
+                    id="usernameError"
+                    role="alert"
+                    {% if not form.username.errors %}hidden{% endif %}
+                >
+                    {{ form.username.errors|striptags }}
+                </p>
+
             </div>
 
+            <!-- PASSWORD -->
             <div class="auth-field">
-                <label for="{{ form.password1.id_for_label }}">Password</label>
+
+                <label for="{{ form.password1.id_for_label }}">
+                    Password
+                </label>
+
                 {{ form.password1 }}
-                {{ form.password1.errors }}
+
+                <p
+                    class="auth-error"
+                    id="password1Error"
+                    role="alert"
+                    {% if not form.password1.errors %}hidden{% endif %}
+                >
+                    {{ form.password1.errors|striptags }}
+                </p>
+
             </div>
 
+            <!-- CONFIRM PASSWORD -->
             <div class="auth-field">
-                <label for="{{ form.password2.id_for_label }}">Confirm Password</label>
+
+                <label for="{{ form.password2.id_for_label }}">
+                    Confirm Password
+                </label>
+
                 {{ form.password2 }}
-                {{ form.password2.errors }}
+
+                <p
+                    class="auth-error"
+                    id="password2Error"
+                    role="alert"
+                    {% if not form.password2.errors %}hidden{% endif %}
+                >
+                    {{ form.password2.errors|striptags }}
+                </p>
+
             </div>
 
-            <button type="submit" class="auth-submit-btn">
+            <!-- GENERAL ERROR -->
+            <p
+                class="auth-error"
+                id="registerError"
+                role="alert"
+                {% if not form.non_field_errors %}hidden{% endif %}
+            >
+                {{ form.non_field_errors|striptags }}
+            </p>
+
+            <!-- SUCCESS MESSAGE -->
+            <p
+                class="auth-success"
+                id="registerSuccess"
+                role="status"
+                hidden
+            ></p>
+
+            <!-- SUBMIT BUTTON -->
+            <button
+                type="submit"
+                class="auth-submit-btn"
+                id="registerButton"
+            >
                 Create Account
             </button>
 
@@ -50,5 +123,10 @@
     </div>
 
 </section>
+
+<script
+    src="{% static 'games/js/register.js' %}"
+    defer
+></script>
 
 {% endblock %}

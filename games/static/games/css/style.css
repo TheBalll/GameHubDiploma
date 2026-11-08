@@ -2606,3 +2606,83 @@ button.add-library-btn.added {
 #reviewFormError[hidden] {
     display: none;
 }
+
+/* LOGIN VALIDATION */
+
+.auth-error {
+    color: #f87171;
+    background: rgba(248, 113, 113, 0.08);
+    border: 1px solid rgba(248, 113, 113, 0.25);
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.auth-error[hidden] {
+    display: none;
+}
+
+.auth-submit-btn:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+/* REGISTER VALIDATION */
+
+.auth-error[hidden],
+.auth-success[hidden] {
+    display: none;
+}
+
+.auth-success {
+    color: #86efac;
+    background: rgba(134, 239, 172, 0.08);
+    border: 1px solid rgba(134, 239, 172, 0.25);
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.auth-field .auth-error {
+    margin-top: 8px;
+    font-size: 13px;
+}
+
+.auth-submit-btn:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+/* PROFILE AJAX MESSAGES */
+
+.profile-form-message {
+    margin: 16px 0;
+    padding: 12px 14px;
+    border-radius: 8px;
+    background: rgba(248, 113, 113, 0.08);
+    border: 1px solid rgba(248, 113, 113, 0.25);
+    color: #f87171;
+    font-size: 14px;
+}
+
+.profile-form-message.success {
+    background: rgba(134, 239, 172, 0.08);
+    border-color: rgba(134, 239, 172, 0.25);
+    color: #86efac;
+}
+
+.profile-form-message[hidden] {
+    display: none;
+}
+
+.profile-js-error {
+    margin-top: 8px;
+    color: #f87171;
+    font-size: 13px;
+}
+
+.edit-profile-save:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}

@@ -1,5 +1,6 @@
 
 {% extends 'games/base.html' %}
+{% load static %}
 
 {% block title %}Edit Profile | GameHub{% endblock %}
 
@@ -7,38 +8,64 @@
 
 <section class="edit-profile-page">
 
+    <!-- PAGE HEADER -->
     <div class="edit-profile-header">
         <p class="profile-label">ACCOUNT SETTINGS</p>
         <h1>Edit Profile</h1>
         <p>Customize your GameHub profile.</p>
     </div>
 
+    <!-- EDIT PROFILE CARD -->
     <div class="edit-profile-card">
 
-        <form method="post" enctype="multipart/form-data">
+        <form
+            method="post"
+            action="{% url 'edit_profile' %}"
+            enctype="multipart/form-data"
+            id="editProfileForm"
+        >
 
             {% csrf_token %}
 
-            {{ profile_form.non_field_errors }}
+            <!-- GENERAL DJANGO ERRORS -->
+            {% if profile_form.non_field_errors %}
+                <div class="profile-form-message" role="alert">
+                    {{ profile_form.non_field_errors }}
+                </div>
+            {% endif %}
 
             <!-- PROFILE NAME -->
             <div class="edit-profile-field">
+
                 <label for="{{ profile_form.profile_name.id_for_label }}">
                     Profile Name
                 </label>
 
                 {{ profile_form.profile_name }}
-                {{ profile_form.profile_name.errors }}
+
+                {% if profile_form.profile_name.errors %}
+                    <div class="profile-js-error" role="alert">
+                        {{ profile_form.profile_name.errors }}
+                    </div>
+                {% endif %}
+
             </div>
 
             <!-- BIO -->
             <div class="edit-profile-field">
+
                 <label for="{{ profile_form.bio.id_for_label }}">
                     Bio
                 </label>
 
                 {{ profile_form.bio }}
-                {{ profile_form.bio.errors }}
+
+                {% if profile_form.bio.errors %}
+                    <div class="profile-js-error" role="alert">
+                        {{ profile_form.bio.errors }}
+                    </div>
+                {% endif %}
+
             </div>
 
             <!-- PROFILE PICTURE -->
@@ -48,6 +75,7 @@
 
                 <div class="avatar-upload">
 
+                    <!-- AVATAR PREVIEW -->
                     <div class="avatar-upload-preview">
 
                         <img
@@ -62,13 +90,16 @@
 
                         <span
                             id="avatarPreviewLetter"
-                            {% if profile_form.instance.avatar %}hidden{% endif %}
+                            {% if profile_form.instance.avatar %}
+                                hidden
+                            {% endif %}
                         >
                             {{ profile_form.instance.profile_name|default:user.username|first|upper }}
                         </span>
 
                     </div>
 
+                    <!-- AVATAR CONTROLS -->
                     <div class="avatar-upload-content">
 
                         <p class="avatar-upload-title">
@@ -81,7 +112,7 @@
 
                         <div class="avatar-upload-actions">
 
-                            <!-- UPLOAD / CHANGE -->
+                            <!-- UPLOAD OR CHANGE PICTURE -->
                             <input
                                 type="file"
                                 id="id_avatar"
@@ -118,32 +149,57 @@
 
                         </div>
 
-                        <p class="avatar-upload-hint" id="avatarFileName">
+                        <!-- FILE INFORMATION -->
+                        <p
+                            class="avatar-upload-hint"
+                            id="avatarFileName"
+                        >
                             JPG, PNG or WebP
                         </p>
 
-                        <p class="avatar-upload-status"
-                           id="avatarUploadStatus"
-                           aria-live="polite"></p>
+                        <!-- AVATAR STATUS -->
+                        <p
+                            class="avatar-upload-status"
+                            id="avatarUploadStatus"
+                            aria-live="polite"
+                        ></p>
 
                     </div>
 
                 </div>
 
-                {{ profile_form.avatar.errors }}
+                <!-- AVATAR VALIDATION ERRORS -->
+                {% if profile_form.avatar.errors %}
+                    <div class="profile-js-error" role="alert">
+                        {{ profile_form.avatar.errors }}
+                    </div>
+                {% endif %}
 
             </div>
 
-            <!-- ACTIONS -->
+            <!-- AJAX STATUS MESSAGE -->
+            <p
+                id="profileFormMessage"
+                class="profile-form-message"
+                role="alert"
+                hidden
+            ></p>
+
+            <!-- ACTION BUTTONS -->
             <div class="edit-profile-actions">
 
-                <a href="{% url 'profile' %}"
-                   class="edit-profile-cancel">
+                <a
+                    href="{% url 'profile' %}"
+                    class="edit-profile-cancel"
+                >
                     Cancel
                 </a>
 
-                <button type="submit"
-                        class="edit-profile-save">
+                <button
+                    type="submit"
+                    class="edit-profile-save"
+                    id="saveProfileButton"
+                >
                     Save Changes
                 </button>
 
@@ -155,69 +211,10 @@
 
 </section>
 
-<script>
-    const avatarInput = document.getElementById("id_avatar");
-    const avatarClear = document.getElementById("id_avatar-clear");
-    const avatarImage = document.getElementById("avatarPreviewImage");
-    const avatarLetter = document.getElementById("avatarPreviewLetter");
-    const avatarFileName = document.getElementById("avatarFileName");
-    const avatarStatus = document.getElementById("avatarUploadStatus");
-
-    const originalAvatar = avatarImage.getAttribute("src") || "";
-    let previewUrl = null;
-
-    function showOriginalAvatar() {
-        if (originalAvatar) {
-            avatarImage.src = originalAvatar;
-            avatarImage.hidden = false;
-            avatarLetter.hidden = true;
-        } else {
-            avatarImage.hidden = true;
-            avatarLetter.hidden = false;
-        }
-    }
-
-    avatarInput.addEventListener("change", function () {
-        const file = this.files[0];
-
-        if (!file) {
-            return;
-        }
-
-        if (avatarClear) {
-            avatarClear.checked = false;
-        }
-
-        if (previewUrl) {
-            URL.revokeObjectURL(previewUrl);
-        }
-
-        previewUrl = URL.createObjectURL(file);
-
-        avatarImage.src = previewUrl;
-        avatarImage.hidden = false;
-        avatarLetter.hidden = true;
-
-        avatarFileName.textContent = file.name;
-        avatarStatus.textContent = "New picture selected. Save to apply.";
-    });
-
-    if (avatarClear) {
-        avatarClear.addEventListener("change", function () {
-            if (this.checked) {
-                avatarInput.value = "";
-                avatarImage.hidden = true;
-                avatarLetter.hidden = false;
-
-                avatarFileName.textContent = "JPG, PNG or WebP";
-                avatarStatus.textContent =
-                    "Picture will be removed when you save.";
-            } else {
-                showOriginalAvatar();
-                avatarStatus.textContent = "";
-            }
-        });
-    }
-</script>
+<!-- PROFILE JAVASCRIPT -->
+<script
+    src="{% static 'games/js/profile.js' %}"
+    defer
+></script>
 
 {% endblock %}

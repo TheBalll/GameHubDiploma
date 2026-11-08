@@ -1,18 +1,18 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Game, Review, LibraryEntry, UserProfile
-from .forms import ReviewForm, LibraryEntryForm, UserProfileForm
-from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse, HttpResponseForbidden
-from django.views.decorators.http import require_POST
-from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseForbidden
 from django.urls import reverse
 from django.db.models import Q
-from django.contrib.auth.models import User
-from django.shortcuts import get_object_or_404, render
 from django.core.exceptions import PermissionDenied
+
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.decorators import login_required
+
 from django.views.decorators.http import require_GET, require_POST
+
+from .models import Game, Review, LibraryEntry, UserProfile
+from .forms import ReviewForm, LibraryEntryForm, UserProfileForm
 
 def home(request):
     return render(request, 'games/home.html')
@@ -138,27 +138,69 @@ def game_detail(request, game_id):
         "is_in_library": is_in_library
     })
 
-
-
 def register(request):
-    if request.method == 'POST':
+    if request.user.is_authenticated:
+        return redirect("home")
+
+    if request.method == "POST":
         form = UserCreationForm(request.POST)
+
+        is_ajax = (
+            request.headers.get("X-Requested-With")
+            == "XMLHttpRequest"
+        )
 
         if form.is_valid():
             form.save()
-            return redirect('login')
+
+            if is_ajax:
+                return JsonResponse({
+                    "success": True,
+                    "message": "Account created successfully!",
+                    "redirect_url": reverse("login")
+                }, status=201)
+
+            return redirect("login")
+
+        if is_ajax:
+            return JsonResponse({
+                "success": False,
+                "message": "Please correct the errors below.",
+                "errors": form.errors.get_json_data()
+            }, status=400)
 
     else:
         form = UserCreationForm()
 
-    return render(request, 'games/register.html', {
-        'form': form
+    return render(request, "games/register.html", {
+        "form": form
     })
 
 def login_view(request):
-    if request.method == 'POST':
-        username = request.POST['username']
-        password = request.POST['password']
+    if request.user.is_authenticated:
+        return redirect("home")
+
+    if request.method == "POST":
+        username = request.POST.get("username", "").strip()
+        password = request.POST.get("password", "")
+
+        is_ajax = (
+            request.headers.get("X-Requested-With")
+            == "XMLHttpRequest"
+        )
+
+        if not username or not password:
+            message = "Please enter your username and password."
+
+            if is_ajax:
+                return JsonResponse({
+                    "success": False,
+                    "message": message
+                }, status=400)
+
+            return render(request, "games/login.html", {
+                "error": message
+            })
 
         user = authenticate(
             request,
@@ -168,9 +210,29 @@ def login_view(request):
 
         if user is not None:
             login(request, user)
-            return redirect('home')
 
-    return render(request, 'games/login.html')
+            if is_ajax:
+                return JsonResponse({
+                    "success": True,
+                    "redirect_url": reverse("home")
+                })
+
+            return redirect("home")
+
+        message = "Invalid username or password."
+
+        if is_ajax:
+            return JsonResponse({
+                "success": False,
+                "message": message
+            }, status=400)
+
+        return render(request, "games/login.html", {
+            "error": message
+        })
+
+    return render(request, "games/login.html")
+
 
 def logout_view(request):
     logout(request)
@@ -476,9 +538,7 @@ def search_results(request):
     return render(request, "games/search_results.html", {
         "query": query
     })
-
-
-    
+   
 @login_required
 def profile(request):
     user_profile, created = UserProfile.objects.get_or_create(
@@ -503,31 +563,52 @@ def profile(request):
 
     return render(request, "games/profile.html", context)
 
+
 @login_required
 def edit_profile(request):
     user_profile, created = UserProfile.objects.get_or_create(
         user=request.user
     )
 
-    if request.method == 'POST':
+    if request.method == "POST":
         profile_form = UserProfileForm(
             request.POST,
             request.FILES,
             instance=user_profile
         )
 
+        is_ajax = (
+            request.headers.get("X-Requested-With")
+            == "XMLHttpRequest"
+        )
+
         if profile_form.is_valid():
             profile_form.save()
-            return redirect('profile')
+
+            if is_ajax:
+                return JsonResponse({
+                    "success": True,
+                    "message": "Profile updated successfully!",
+                    "redirect_url": reverse("profile")
+                })
+
+            return redirect("profile")
+
+        if is_ajax:
+            return JsonResponse({
+                "success": False,
+                "message": "Please correct the errors below.",
+                "errors": profile_form.errors.get_json_data()
+            }, status=400)
 
     else:
         profile_form = UserProfileForm(instance=user_profile)
 
-    return render(request, 'games/edit_profile.html', {
-        'profile_form': profile_form
+    return render(request, "games/edit_profile.html", {
+        "profile_form": profile_form
     })
 
-    
+
 @login_required
 def public_profile(request, user_id):
     # Намираме потребителя, чийто профил искаме да отворим

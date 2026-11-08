@@ -2433,3 +2433,176 @@ input[type="number"] {
     outline-offset: 4px;
     border-radius: 6px;
 }
+
+/* SEARCH PAGE - JAVASCRIPT FILTERS */
+
+.search-page-filters {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.search-page-filters input,
+.search-page-filters select {
+    background: #151520;
+    color: #ffffff;
+    border: 1px solid #303047;
+    border-radius: 8px;
+    padding: 13px 15px;
+    font-size: 14px;
+    outline: none;
+}
+
+.search-page-filters input {
+    flex: 1;
+    min-width: 220px;
+}
+
+.search-page-filters select {
+    min-width: 150px;
+    cursor: pointer;
+}
+
+.search-page-filters input:focus,
+.search-page-filters select:focus {
+    border-color: #8b7cff;
+}
+
+#search-page-count {
+    color: #9b9baa;
+    font-size: 14px;
+    margin-bottom: 18px;
+}
+
+/* LIBRARY JAVASCRIPT MODALS */
+
+#libraryEditModal[hidden],
+#libraryRemoveModal[hidden] {
+    display: none !important;
+}
+
+#libraryEditModal .delete-modal,
+#libraryRemoveModal .delete-modal {
+    max-width: 430px;
+    width: 100%;
+}
+
+#libraryStatusSelect {
+    display: block;
+    width: 100%;
+    margin: 16px 0 24px;
+    padding: 13px 15px;
+    background: #151520;
+    color: #ffffff;
+    border: 1px solid #35354b;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+#libraryStatusSelect:focus {
+    outline: none;
+    border-color: #8b7cff;
+}
+
+#libraryEditError,
+#libraryRemoveError {
+    color: #f87171;
+    margin-bottom: 12px;
+}
+
+.library-actions button {
+    cursor: pointer;
+    font: inherit;
+}
+
+.library-actions button.edit-library-btn {
+    border: none;
+}
+
+.library-actions button.remove-library-btn {
+    border: none;
+}
+
+.library-card[hidden] {
+    display: none !important;
+}
+
+/* ADD TO LIBRARY BUTTON */
+
+button.add-library-btn {
+    cursor: pointer;
+    font: inherit;
+    border: none;
+}
+
+button.add-library-btn:disabled {
+    cursor: default;
+    opacity: 0.75;
+}
+
+button.add-library-btn.added {
+    opacity: 0.85;
+}
+
+#addToLibraryMessage {
+    margin-top: 12px;
+    color: #a7a7b8;
+    font-size: 14px;
+}
+
+#addToLibraryMessage[hidden] {
+    display: none;
+}
+
+/* EDIT REVIEW MODAL */
+
+#editReviewModal[hidden] {
+    display: none !important;
+}
+
+#editReviewModal .delete-modal {
+    width: 100%;
+    max-width: 460px;
+}
+
+#editReviewModal label {
+    display: block;
+    margin-top: 14px;
+    margin-bottom: 7px;
+    color: #d8d8e5;
+}
+
+#editReviewModal input,
+#editReviewModal textarea {
+    width: 100%;
+    padding: 12px 14px;
+    background: #151520;
+    color: #ffffff;
+    border: 1px solid #35354b;
+    border-radius: 8px;
+    font: inherit;
+    box-sizing: border-box;
+}
+
+#editReviewModal textarea {
+    resize: vertical;
+}
+
+#editReviewModal input:focus,
+#editReviewModal textarea:focus {
+    outline: none;
+    border-color: #8b7cff;
+}
+
+#editReviewError,
+#reviewFormError {
+    color: #f87171;
+    margin: 12px 0;
+}
+
+#editReviewError[hidden],
+#reviewFormError[hidden] {
+    display: none;
+}

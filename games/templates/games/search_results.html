@@ -1,56 +1,87 @@
+
 {% extends 'games/base.html' %}
+{% load static %}
 
 {% block title %}Search | GameHub{% endblock %}
 
 {% block content %}
 
-<section class="search-page">
+<section
+    class="search-page"
+    id="search-page-app"
+    data-api-url="{% url 'search_results' %}"
+>
 
     <div class="search-page-header">
-        <p class="search-page-label">SEARCH RESULTS</p>
 
-        <h1>Results for "{{ query }}"</h1>
+        <p class="search-page-label">
+            SEARCH & FILTER
+        </p>
+
+        <h1>Explore Games</h1>
 
         <p>
-            Find games that match your search.
+            Search, filter and discover games.
         </p>
-    </div>
-
-    <div class="search-page-grid">
-
-        {% for game in games %}
-
-            <a href="{% url 'game_detail' game.id %}" class="search-game-card">
-
-                <span class="game-genre">
-                    {{ game.genre }}
-                </span>
-
-                <h2>{{ game.title }}</h2>
-
-                <p>
-                    {{ game.developer }} • {{ game.release_year }}
-                </p>
-
-                <span class="search-view-game">
-                    View Game
-                </span>
-
-            </a>
-
-        {% empty %}
-
-            <div class="search-empty">
-                <h2>No games found</h2>
-                <p>
-                    We couldn't find any games matching "{{ query }}".
-                </p>
-            </div>
-
-        {% endfor %}
 
     </div>
+
+    <!-- SEARCH AND FILTER CONTROLS -->
+    <form
+        id="search-page-form"
+        class="search-page-filters"
+        method="get"
+        action="{% url 'search_results' %}"
+    >
+
+        <input
+            type="search"
+            id="search-page-query"
+            name="q"
+            placeholder="Search games..."
+            value="{{ query }}"
+            autocomplete="off"
+            aria-label="Search games"
+        >
+
+        <select
+            id="search-page-genre"
+            name="genre"
+            aria-label="Filter by genre"
+        >
+            <option value="">All genres</option>
+        </select>
+
+        <select
+            id="search-page-sort"
+            name="sort"
+            aria-label="Sort games"
+        >
+            <option value="title">Name A-Z</option>
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+        </select>
+
+    </form>
+
+    <!-- JAVASCRIPT STATUS -->
+    <p id="search-page-count"
+       aria-live="polite">
+        Loading games...
+    </p>
+
+    <!-- GAME CARDS CREATED BY JAVASCRIPT -->
+    <div
+        id="search-page-grid"
+        class="search-page-grid"
+        aria-busy="true"
+    ></div>
 
 </section>
+
+<script
+    src="{% static 'games/js/search-results.js' %}"
+    defer>
+</script>
 
 {% endblock %}

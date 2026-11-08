@@ -22,6 +22,7 @@ urlpatterns = [
     path('profile/edit/', views.edit_profile, name='edit_profile'),
     
     path('library/', views.library, name='library'),
+    path('library/data/', views.library_data, name='library_data'),
 
     path(
         'games/<int:game_id>/add-to-library/',

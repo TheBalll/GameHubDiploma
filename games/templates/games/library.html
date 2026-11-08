@@ -1,11 +1,17 @@
 
 {% extends 'games/base.html' %}
+{% load static %}
 
 {% block title %}My Library | GameHub{% endblock %}
 
 {% block content %}
 
-<section class="library-section">
+<section
+    class="library-section"
+    id="libraryApp"
+    data-api-url="{% url 'library_data' %}"
+    data-games-url="{% url 'games_list' %}"
+>
 
     <div class="library-header">
         <p class="library-label">YOUR COLLECTION</p>
@@ -13,11 +19,11 @@
         <p>Track your progress and manage your games.</p>
     </div>
 
-    <!-- LIBRARY STATISTICS -->
+    <!-- STATISTICS -->
     <div class="library-stats">
 
         <div class="library-stat-card">
-            <span id="totalGames">{{ library_entries|length }}</span>
+            <span id="totalGames">0</span>
             <p>Total Games</p>
         </div>
 
@@ -33,8 +39,9 @@
 
     </div>
 
-    <!-- STATUS FILTERS -->
+    <!-- FILTERS -->
     <div class="library-filters">
+
         <button type="button"
                 class="library-filter active"
                 data-filter="all">
@@ -64,136 +71,134 @@
                 data-filter="dropped">
             Dropped
         </button>
-    </div>
-
-    <!-- GAME CARDS -->
-    <div class="library-grid" id="libraryGrid">
-
-        {% for entry in library_entries %}
-
-            <div class="library-card"
-                 data-status="{{ entry.status }}">
-
-                <div class="library-card-content">
-
-                    <span class="game-genre">
-                        {{ entry.game.genre }}
-                    </span>
-
-                    <h2>{{ entry.game.title }}</h2>
-
-                    <span class="library-status">
-                        {{ entry.get_status_display }}
-                    </span>
-
-                    <div class="library-actions">
-
-                        <a href="{% url 'edit_library_entry' entry.game.id %}"
-                           class="edit-library-btn">
-                            Edit
-                        </a>
-
-                        <a href="{% url 'game_detail' entry.game.id %}"
-                           class="details-btn">
-                            View Details
-                        </a>
-
-                        <form method="post"
-                              action="{% url 'remove_from_library' entry.game.id %}">
-                            {% csrf_token %}
-
-                            <button type="submit"
-                                    class="remove-library-btn">
-                                Remove
-                            </button>
-                        </form>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        {% empty %}
-
-            <div class="library-empty">
-                <h2>Your library is empty</h2>
-                <p>
-                    Start exploring games and add your favorites
-                    to your collection.
-                </p>
-
-                <a href="{% url 'games_list' %}"
-                   class="library-explore-btn">
-                    Explore Games
-                </a>
-            </div>
-
-        {% endfor %}
 
     </div>
 
-    <p id="libraryNoResults"
-       class="library-no-results"
-       hidden>
+    <!-- JAVASCRIPT GAME CARDS -->
+    <div
+        class="library-grid"
+        id="libraryGrid"
+        aria-live="polite"
+        aria-busy="true"
+    >
+        <p>Loading your library...</p>
+    </div>
+
+    <p
+        id="libraryNoResults"
+        class="library-no-results"
+        hidden
+    >
         No games found with this status.
     </p>
 
 </section>
 
-<script>
-document.addEventListener("DOMContentLoaded", function () {
+<!-- STATUS EDIT MODAL -->
+<div
+    id="libraryEditModal"
+    class="delete-modal-overlay"
+    hidden
+>
+    <div
+        class="delete-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="libraryEditTitle"
+    >
 
-    const cards = document.querySelectorAll(".library-card");
-    const filterButtons = document.querySelectorAll(".library-filter");
-    const noResults = document.getElementById("libraryNoResults");
+        <h2 id="libraryEditTitle">Edit Game Status</h2>
 
-    const playingCount = document.getElementById("playingGames");
-    const completedCount = document.getElementById("completedGames");
+        <p id="libraryEditGameTitle"></p>
 
-    playingCount.textContent = [...cards].filter(
-        card => card.dataset.status === "playing"
-    ).length;
+        <label for="libraryStatusSelect">
+            Game Status
+        </label>
 
-    completedCount.textContent = [...cards].filter(
-        card => card.dataset.status === "completed"
-    ).length;
+        <select id="libraryStatusSelect"></select>
 
-    filterButtons.forEach(button => {
+        <p id="libraryEditError" role="alert" hidden></p>
 
-        button.addEventListener("click", function () {
+        <div class="delete-modal-actions">
 
-            const selectedFilter = button.dataset.filter;
-            let visibleCount = 0;
+            <button
+                type="button"
+                class="delete-modal-cancel"
+                id="libraryEditCancel"
+            >
+                Cancel
+            </button>
 
-            filterButtons.forEach(btn => {
-                btn.classList.remove("active");
-            });
+            <button
+                type="button"
+                class="delete-modal-confirm"
+                id="libraryEditSave"
+            >
+                Save Changes
+            </button>
 
-            button.classList.add("active");
+        </div>
 
-            cards.forEach(card => {
+    </div>
+</div>
 
-                const shouldShow =
-                    selectedFilter === "all" ||
-                    card.dataset.status === selectedFilter;
+<!-- REMOVE GAME MODAL -->
+<div
+    id="libraryRemoveModal"
+    class="delete-modal-overlay"
+    hidden
+>
+    <div
+        class="delete-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="libraryRemoveTitle"
+    >
 
-                card.hidden = !shouldShow;
+        <div class="delete-modal-icon">!</div>
 
-                if (shouldShow) {
-                    visibleCount++;
-                }
+        <h2 id="libraryRemoveTitle">
+            Remove Game
+        </h2>
 
-            });
+        <p id="libraryRemoveDescription">
+            Are you sure you want to remove this game
+            from your library?
+        </p>
 
-            noResults.hidden =
-                visibleCount > 0 || cards.length === 0;
+        <p id="libraryRemoveError" role="alert" hidden></p>
 
-        });
+        <div class="delete-modal-actions">
 
-    });
+            <button
+                type="button"
+                class="delete-modal-cancel"
+                id="libraryRemoveCancel"
+            >
+                Cancel
+            </button>
 
-});
-</script>
+            <button
+                type="button"
+                class="delete-modal-confirm"
+                id="libraryRemoveConfirm"
+            >
+                Remove Game
+            </button>
+
+        </div>
+
+    </div>
+</div>
+
+<!-- CSRF TOKEN FOR JAVASCRIPT REQUESTS -->
+<form id="libraryCsrfForm" hidden>
+    {% csrf_token %}
+</form>
+
+<script
+    src="{% static 'games/js/library.js' %}"
+    defer
+></script>
 
 {% endblock %}

@@ -1,3 +1,4 @@
+
 {% extends 'games/base.html' %}
 
 {% block title %}Games | GameHub{% endblock %}
@@ -16,29 +17,51 @@
 
         {% for game in games %}
 
-           <a
-           href="{% url 'game_detail' game.id %}"
-           class="game-card"
-           data-title="{{ game.title|lower }}">
+        <a
+            href="{% url 'game_detail' game.id %}"
+            class="game-card"
+            data-title="{{ game.title|lower }}"
+        >
 
-    <div class="game-card-content">
+            <div class="game-card-image">
+                {% if game.background_image %}
+                    <img
+                        src="{{ game.background_image }}"
+                        alt="{{ game.title }}"
+                        loading="lazy"
+                    >
+                {% else %}
+                    <div class="game-image-placeholder">
+                        <span>No image available</span>
+                    </div>
+                {% endif %}
+            </div>
 
-        <span class="game-genre">{{ game.genre }}</span>
+            <div class="game-card-content">
 
-        <h2>{{ game.title }}</h2>
+                <span class="game-genre">{{ game.genre }}</span>
 
-        <p class="game-description">
-            {{ game.description }}
-        </p>
+                <h2>{{ game.title }}</h2>
 
-        <div class="game-info">
-            <p><strong>Developer:</strong> {{ game.developer }}</p>
-            <p><strong>Released:</strong> {{ game.release_year }}</p>
-        </div>
+                <p class="game-description">
+                    {{ game.description|truncatechars:140 }}
+                </p>
 
-    </div>
+                <div class="game-info">
+                    <p>
+                        <strong>Developer:</strong>
+                        {{ game.developer }}
+                    </p>
 
-</a>
+                    <p>
+                        <strong>Released:</strong>
+                        {{ game.release_year }}
+                    </p>
+                </div>
+
+            </div>
+
+        </a>
 
         {% empty %}
 

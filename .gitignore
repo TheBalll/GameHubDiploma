@@ -14,12 +14,14 @@ env/
 # VS Code
 .vscode/
 
-# Environment variables / secrets
-.env
-
 # OS files
 .DS_Store
 Thumbs.db
 
 # User uploaded files
 /media/
+
+# Environment variables / secrets
+.env
+.env.*
+!.env.example

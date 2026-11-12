@@ -9,7 +9,7 @@ class Game(models.Model):
     release_year = models.PositiveIntegerField()
     developer = models.CharField(max_length=150)
 
-    rawg_id = models.PositiveIntegerField(
+    igdb_id = models.PositiveIntegerField(
         unique=True,
         null=True,
         blank=True

@@ -28,11 +28,29 @@
             {% csrf_token %}
 
             <!-- GENERAL DJANGO ERRORS -->
-            {% if profile_form.non_field_errors %}
+            {% if user_form.non_field_errors or profile_form.non_field_errors %}
                 <div class="profile-form-message" role="alert">
+                    {{ user_form.non_field_errors }}
                     {{ profile_form.non_field_errors }}
                 </div>
             {% endif %}
+
+            <!-- USERNAME -->
+            <div class="edit-profile-field">
+
+                <label for="{{ user_form.username.id_for_label }}">
+                    Username
+                </label>
+
+                {{ user_form.username }}
+
+                {% if user_form.username.errors %}
+                    <div class="profile-js-error" role="alert">
+                        {{ user_form.username.errors }}
+                    </div>
+                {% endif %}
+
+            </div>
 
             <!-- PROFILE NAME -->
             <div class="edit-profile-field">

@@ -12,7 +12,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_GET, require_POST
 
 from .models import Game, Review, LibraryEntry, UserProfile
-from .forms import ReviewForm, LibraryEntryForm, UserProfileForm
+from .forms import ReviewForm, LibraryEntryForm, UserProfileForm, UserEditForm
 
 def home(request):
     return render(request, 'games/home.html')
@@ -563,7 +563,6 @@ def profile(request):
 
     return render(request, "games/profile.html", context)
 
-
 @login_required
 def edit_profile(request):
     user_profile, created = UserProfile.objects.get_or_create(
@@ -571,6 +570,11 @@ def edit_profile(request):
     )
 
     if request.method == "POST":
+        user_form = UserEditForm(
+            request.POST,
+            instance=request.user
+        )
+
         profile_form = UserProfileForm(
             request.POST,
             request.FILES,
@@ -582,7 +586,11 @@ def edit_profile(request):
             == "XMLHttpRequest"
         )
 
-        if profile_form.is_valid():
+        user_valid = user_form.is_valid()
+        profile_valid = profile_form.is_valid()
+
+        if user_valid and profile_valid:
+            user_form.save()
             profile_form.save()
 
             if is_ajax:
@@ -595,19 +603,28 @@ def edit_profile(request):
             return redirect("profile")
 
         if is_ajax:
+            errors = {}
+
+            for field, messages in user_form.errors.get_json_data().items():
+                errors[field] = messages
+
+            for field, messages in profile_form.errors.get_json_data().items():
+                errors[field] = messages
+
             return JsonResponse({
                 "success": False,
                 "message": "Please correct the errors below.",
-                "errors": profile_form.errors.get_json_data()
+                "errors": errors
             }, status=400)
 
     else:
+        user_form = UserEditForm(instance=request.user)
         profile_form = UserProfileForm(instance=user_profile)
 
     return render(request, "games/edit_profile.html", {
+        "user_form": user_form,
         "profile_form": profile_form
     })
-
 
 @login_required
 def public_profile(request, user_id):

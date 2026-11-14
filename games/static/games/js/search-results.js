@@ -29,35 +29,120 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     // CREATE A GAME CARD
-    function createGameCard(game) {
+    
+  function createGameCard(game) {
+    const isExternal = game.source === "igdb";
 
-        const card = document.createElement("a");
+    const card = document.createElement(
+        isExternal ? "div" : "a"
+    );
+
+    card.className = "search-game-card";
+
+    if (!isExternal) {
         card.href = game.url;
-        card.className = "search-game-card";
+    }
 
-        const genre = document.createElement("span");
-        genre.className = "game-genre";
-        genre.textContent = game.genre;
+    // Game cover
+    const imageContainer = document.createElement("div");
+    imageContainer.className = "search-game-image";
 
-        const title = document.createElement("h2");
-        title.textContent = game.title;
+    if (game.image) {
+        const image = document.createElement("img");
+        image.src = game.image;
+        image.alt = game.title;
+        image.loading = "lazy";
 
-        const description = document.createElement("p");
-        description.textContent =
-            `${game.developer} • ${game.release_year}`;
+        imageContainer.appendChild(image);
+    } else {
+        imageContainer.textContent = "No image available";
+    }
 
+    // Game information
+    const content = document.createElement("div");
+    content.className = "search-game-content";
+
+    const genre = document.createElement("span");
+    genre.className = "game-genre";
+    genre.textContent = game.genre || "Unknown";
+
+    const title = document.createElement("h2");
+    title.textContent = game.title;
+
+    const description = document.createElement("p");
+    description.textContent =
+        `${game.developer || "Unknown"} • ${game.release_year || "N/A"}`;
+
+    content.appendChild(genre);
+    content.appendChild(title);
+    content.appendChild(description);
+
+    if (isExternal) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "search-view-game";
+        button.textContent = "Add to GameHub";
+
+        button.addEventListener("click", async function () {
+            button.disabled = true;
+            button.textContent = "Adding...";
+
+            try {
+                const csrfToken = document.querySelector(
+                    "#igdb-csrf-form input[name='csrfmiddlewaretoken']"
+                )?.value;
+
+                if (!csrfToken) {
+                    throw new Error("CSRF token not found");
+                }
+
+                const response = await fetch(
+                    `/games/import-igdb/${game.id}/`,
+                    {
+                        method: "POST",
+                        credentials: "same-origin",
+                        headers: {
+                            "X-CSRFToken": csrfToken,
+                            "Accept": "application/json"
+                        }
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error("Could not import game");
+                }
+
+                const data = await response.json();
+
+                if (!data.success || !data.url) {
+                    throw new Error("Invalid import response");
+                }
+
+                window.location.href = data.url;
+
+            } catch (error) {
+                console.error(error);
+                button.disabled = false;
+                button.textContent = "Try Again";
+            }
+        });
+
+        content.appendChild(button);
+    } else {
         const viewGame = document.createElement("span");
         viewGame.className = "search-view-game";
         viewGame.textContent = "View Game";
 
-        card.appendChild(genre);
-        card.appendChild(title);
-        card.appendChild(description);
-        card.appendChild(viewGame);
-
-        return card;
+        content.appendChild(viewGame);
     }
 
+    card.appendChild(imageContainer);
+    card.appendChild(content);
+
+    return card;
+  }
+ 
+  
 
     // SHOW A MESSAGE WHEN THERE ARE NO RESULTS
     function showMessage(titleText, messageText) {

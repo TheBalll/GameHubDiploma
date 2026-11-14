@@ -1,3 +1,4 @@
+import requests
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse, HttpResponseForbidden
 from django.urls import reverse
@@ -14,6 +15,11 @@ from django.views.decorators.http import require_GET, require_POST
 from .models import Game, Review, LibraryEntry, UserProfile
 from .forms import ReviewForm, LibraryEntryForm, UserProfileForm, UserEditForm
 from django.core.paginator import Paginator
+from games.services.igdb import search_games as search_igdb_games
+from django.views.decorators.http import require_POST
+from games.services.game_import import import_game_from_igdb
+from datetime import datetime, timezone
+from games.models import Game
 
 def home(request):
     return render(request, 'games/home.html')
@@ -501,65 +507,149 @@ def search_results(request):
     genre = request.GET.get("genre", "").strip()
     sort = request.GET.get("sort", "title")
 
-    # При заявка от JavaScript връщаме JSON
-    if request.GET.get("format") == "json":
-
-        games = Game.objects.all()
-
-        # Търсене по име, жанр или разработчик
-        if query:
-            games = games.filter(
-                Q(title__icontains=query) |
-                Q(genre__icontains=query) |
-                Q(developer__icontains=query)
-            )
-
-        # Филтриране по жанр
-        if genre:
-            games = games.filter(genre=genre)
-
-        # Сортиране
-        sorting_options = {
-            "title": "title",
-            "newest": "-release_year",
-            "oldest": "release_year",
-        }
-
-        order = sorting_options.get(sort, "title")
-        games = games.order_by(order, "id")
-
-        # Всички жанрове идват от SQLite
-        genres = list(
-            Game.objects.order_by("genre")
+    # Get available genres from SQLite
+    genres = sorted(
+        set(
+            Game.objects.exclude(genre="")
             .values_list("genre", flat=True)
-            .distinct()
+        )
+    )
+
+    # Start with games from SQLite
+    games = Game.objects.all()
+
+    # Search ONLY by game title
+    if query:
+        games = games.filter(
+            title__icontains=query
         )
 
-        results = []
+    # Filter by genre
+    if genre:
+        games = games.filter(genre=genre)
 
-        for game in games:
-            results.append({
-                "id": game.id,
-                "title": game.title,
-                "genre": game.genre,
-                "developer": game.developer,
-                "release_year": game.release_year,
-                "url": reverse(
-                    "game_detail",
-                    kwargs={"game_id": game.id}
-                )
-            })
+    # Sort games
+    if sort == "newest":
+        games = games.order_by(
+            "-release_year", "title"
+        )
+    elif sort == "oldest":
+        games = games.order_by(
+            "release_year", "title"
+        )
+    else:
+        games = games.order_by("title")
 
-        return JsonResponse({
-            "games": results,
-            "genres": genres,
-            "count": len(results)
+    # Return the normal HTML page
+    if request.GET.get("format") != "json":
+        return render(
+            request,
+            "games/search_results.html",
+            {"query": query}
+        )
+
+    results = []
+
+    # Prepare local games for JavaScript
+    for game in games:
+        results.append({
+            "id": game.id,
+            "title": game.title,
+            "genre": game.genre,
+            "developer": game.developer,
+            "release_year": game.release_year,
+            "image": game.background_image,
+            "url": reverse(
+                "game_detail",
+                kwargs={"game_id": game.id}
+            ),
+            "source": "local",
         })
 
-    # Обикновено отваряне на страницата
-    return render(request, "games/search_results.html", {
-        "query": query
+    # Search IGDB if SQLite has no results
+    if query and not results and not genre:
+        try:
+            external_games = search_igdb_games(
+                query,
+                limit=5
+            )
+
+            for external_game in external_games:
+                igdb_id = external_game.get("id")
+                title = external_game.get("name")
+
+                if not igdb_id or not title:
+                    continue
+
+                # Get cover image
+                cover = external_game.get("cover") or {}
+                image_id = cover.get("image_id")
+
+                image_url = ""
+
+                if image_id:
+                    image_url = (
+                        "https://images.igdb.com/igdb/"
+                        "image/upload/"
+                        f"t_cover_big/{image_id}.jpg"
+                    )
+
+                # Get genres
+                game_genres = [
+                    item["name"]
+                    for item in external_game.get("genres", [])
+                    if item.get("name")
+                ]
+
+                genre_text = (
+                    ", ".join(game_genres) or "Unknown"
+                )
+
+                # Get developer
+                developer = "Unknown"
+
+                for company in external_game.get(
+                    "involved_companies", []
+                ):
+                    if company.get("developer"):
+                        developer = (
+                            company.get("company") or {}
+                        ).get("name") or "Unknown"
+                        break
+
+                # Get release year
+                release_year = ""
+
+                timestamp = external_game.get(
+                    "first_release_date"
+                )
+
+                if timestamp:
+                    release_year = datetime.fromtimestamp(
+                        timestamp,
+                        tz=timezone.utc
+                    ).year
+
+                results.append({
+                    "id": igdb_id,
+                    "title": title,
+                    "genre": genre_text,
+                    "developer": developer,
+                    "release_year": release_year,
+                    "image": image_url,
+                    "url": None,
+                    "source": "igdb",
+                })
+
+        except (requests.RequestException, ValueError, KeyError):
+            pass
+
+    return JsonResponse({
+        "games": results,
+        "genres": genres,
+        "count": len(results),
     })
+
    
 @login_required
 def profile(request):
@@ -699,3 +789,32 @@ def delete_review_from_profile(request, review_id):
 
     # Връщаме администратора в публичния профил
     return redirect('public_profile', user_id=profile_user_id)
+
+
+@require_POST
+def import_igdb_game(request, igdb_id):
+    try:
+        game, created = import_game_from_igdb(igdb_id)
+
+        if game is None:
+            return JsonResponse(
+                {"error": "Game not found on IGDB."},
+                status=404
+            )
+
+        return JsonResponse({
+            "success": True,
+            "created": created,
+            "game_id": game.id,
+            "url": reverse(
+                "game_detail",
+                kwargs={"game_id": game.id}
+            )
+        })
+
+    except requests.RequestException:
+        return JsonResponse(
+            {"error": "IGDB is temporarily unavailable."},
+            status=503
+        )
+

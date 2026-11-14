@@ -2794,3 +2794,143 @@ button.add-library-btn.added {
 .games-grid .game-card:hover img {
     transform: scale(1.04);
 }
+
+/* Search results cards */
+
+.search-game-card {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.search-game-image {
+    width: 110px;
+    height: 150px;
+    flex-shrink: 0;
+    overflow: hidden;
+    border-radius: 8px;
+    background: #242433;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #a1a1b5;
+    font-size: 12px;
+    text-align: center;
+}
+
+.search-game-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.search-game-content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    min-width: 0;
+}
+
+.search-game-content h2 {
+    margin: 0;
+}
+
+.search-game-content p {
+    margin: 0;
+}
+
+.search-game-content .search-view-game {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 8px;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    background: #7357f6;
+    color: #ffffff;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.search-game-content .search-view-game:hover {
+    background: #6246ea;
+}
+
+.search-game-content .search-view-game:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
+
+
+/* Search & Filter - Game Cards Layout */
+
+.search-page-grid .search-game-card {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 24px;
+    padding: 20px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.search-page-grid .search-game-image {
+    width: 110px;
+    height: 150px;
+    flex: 0 0 110px;
+    overflow: hidden;
+    border-radius: 8px;
+    background: #242433;
+}
+
+.search-page-grid .search-game-image img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.search-page-grid .search-game-content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+}
+
+.search-page-grid .search-game-content h2,
+.search-page-grid .search-game-content p {
+    margin: 0;
+}
+
+.search-page-grid .search-game-content .search-view-game {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 16px;
+    margin-top: 8px;
+    border: none;
+    border-radius: 8px;
+    background: #7357f6;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.search-page-grid .search-game-content .search-view-game:hover {
+    background: #6246ea;
+}
+
+.search-page-grid .search-game-content .search-view-game:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}

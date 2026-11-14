@@ -59,4 +59,10 @@ urlpatterns = [
     path('users/<int:user_id>/', views.public_profile, name='public_profile'),
    
     path('reviews/<int:review_id>/delete-from-profile/',views.delete_review_from_profile,name='delete_review_from_profile'),
+    
+    path(
+    "games/import-igdb/<int:igdb_id>/",
+    views.import_igdb_game,
+    name="import_igdb_game"
+),
 ]

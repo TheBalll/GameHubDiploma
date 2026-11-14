@@ -113,3 +113,42 @@ def search_games(name, limit=5):
 
     response.raise_for_status()
     return response.json()
+
+
+def get_game_by_id(igdb_id):
+    if not isinstance(igdb_id, int) or igdb_id <= 0:
+        raise ValueError("Invalid IGDB game ID.")
+
+    token = get_access_token()
+
+    headers = {
+        "Client-ID": settings.IGDB_CLIENT_ID,
+        "Authorization": f"Bearer {token}",
+    }
+
+    query = f"""
+        fields name, summary, first_release_date,
+               cover.image_id,
+               genres.name,
+               involved_companies.company.name,
+               involved_companies.developer;
+        where id = {igdb_id};
+        limit 1;
+    """
+
+    response = requests.post(
+        f"{IGDB_API_URL}/games",
+        headers=headers,
+        data=query,
+        timeout=15,
+    )
+
+    response.raise_for_status()
+
+    games = response.json()
+
+    if not games:
+        return None
+
+    return games[0]
+

@@ -12,6 +12,12 @@
     data-api-url="{% url 'search_results' %}"
 >
 
+    <!-- CSRF TOKEN FOR IGDB IMPORT -->
+    <form id="igdb-csrf-form" hidden>
+        {% csrf_token %}
+    </form>
+
+    <!-- PAGE HEADER -->
     <div class="search-page-header">
 
         <p class="search-page-label">
@@ -65,8 +71,10 @@
     </form>
 
     <!-- JAVASCRIPT STATUS -->
-    <p id="search-page-count"
-       aria-live="polite">
+    <p
+        id="search-page-count"
+        aria-live="polite"
+    >
         Loading games...
     </p>
 
@@ -79,6 +87,7 @@
 
 </section>
 
+<!-- SEARCH PAGE JAVASCRIPT -->
 <script
     src="{% static 'games/js/search-results.js' %}"
     defer>

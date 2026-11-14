@@ -1,0 +1,42 @@
+
+<a
+    href="{% url 'game_detail' game.id %}"
+    class="game-card"
+    data-title="{{ game.title|lower }}"
+>
+    <div class="game-card-image">
+        {% if game.background_image %}
+            <img
+                src="{{ game.background_image }}"
+                alt="{{ game.title }}"
+                loading="lazy"
+            >
+        {% else %}
+            <div class="game-image-placeholder">
+                <span>No image available</span>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="game-card-content">
+        <span class="game-genre">{{ game.genre }}</span>
+
+        <h2>{{ game.title }}</h2>
+
+        <p class="game-description">
+            {{ game.description|truncatechars:140 }}
+        </p>
+
+        <div class="game-info">
+            <p>
+                <strong>Developer:</strong>
+                {{ game.developer }}
+            </p>
+
+            <p>
+                <strong>Released:</strong>
+                {{ game.release_year }}
+            </p>
+        </div>
+    </div>
+</a>

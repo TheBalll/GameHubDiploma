@@ -13,17 +13,39 @@ from django.views.decorators.http import require_GET, require_POST
 
 from .models import Game, Review, LibraryEntry, UserProfile
 from .forms import ReviewForm, LibraryEntryForm, UserProfileForm, UserEditForm
+from django.core.paginator import Paginator
 
 def home(request):
     return render(request, 'games/home.html')
 
 
-def games_list(request):
-    games = Game.objects.all()
 
-    return render(request, 'games/games_list.html', {
-        'games': games
-    })
+def games_list(request):
+    games = Game.objects.order_by("id")
+
+    paginator = Paginator(games, 20)
+
+    page_number = request.GET.get("page", 1)
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        "games": page_obj,
+        "page_obj": page_obj,
+    }
+
+    if request.GET.get("load_more") == "1":
+        return render(
+            request,
+            "games/_game_cards.html",
+            context
+        )
+
+    return render(
+        request,
+        "games/games_list.html",
+        context
+    )
+
 
 def game_detail(request, game_id):
     game = get_object_or_404(Game, id=game_id)

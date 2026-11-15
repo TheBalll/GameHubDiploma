@@ -12,75 +12,108 @@
     <a href="{% url 'games_list' %}" class="back-link">
         Back to Games
     </a>
+    
 
-    <!-- GAME INFORMATION -->
-    <div class="game-detail-card">
+ <!-- GAME INFORMATION -->
+ <div class="game-detail-card">
 
-        <span class="game-genre">{{ game.genre }}</span>
+     <div class="game-detail-hero">
 
-        <h1>{{ game.title }}</h1>
+        <!-- GAME COVER -->
+        <div class="game-detail-cover">
+            {% if game.background_image %}
+                <img
+                    src="{{ game.background_image }}"
+                    alt="{{ game.title }} cover"
+                >
+            {% else %}
+                <div class="game-detail-no-cover">
+                    No cover available
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- GAME DETAILS -->
+        <div class="game-detail-main">
+
+            <span class="game-genre">
+                {{ game.genre }}
+            </span>
+
+            <h1>{{ game.title }}</h1>
+
+            <div class="game-detail-info">
+                <p>
+                    <strong>Developer:</strong>
+                    {{ game.developer }}
+                </p>
+
+                <p>
+                    <strong>Release Year:</strong>
+                    {{ game.release_year }}
+                </p>
+            </div>
+
+            <!-- ADD TO LIBRARY -->
+            {% if user.is_authenticated %}
+
+                <form
+                    id="addToLibraryForm"
+                    method="post"
+                    action="{% url 'add_to_library' game.id %}"
+                >
+                    {% csrf_token %}
+
+                    <button
+                        type="submit"
+                        id="addToLibraryButton"
+                        class="add-library-btn"
+                        {% if is_in_library %}disabled{% endif %}
+                    >
+                        {% if is_in_library %}
+                            Added to Library
+                        {% else %}
+                            Add to Library
+                        {% endif %}
+                    </button>
+                </form>
+
+                <p
+                    id="addToLibraryMessage"
+                    role="status"
+                    aria-live="polite"
+                    hidden
+                ></p>
+
+            {% else %}
+
+                <a
+                    href="{% url 'login' %}"
+                    class="add-library-btn"
+                >
+                    Login to Add to Library
+                </a>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+    <!-- DESCRIPTION -->
+    <div class="game-detail-about">
+
+        <h2>About this game</h2>
 
         <p class="game-detail-description">
             {{ game.description }}
         </p>
 
-        <div class="game-detail-info">
-            <p>
-                <strong>Developer:</strong>
-                {{ game.developer }}
-            </p>
-
-            <p>
-                <strong>Release Year:</strong>
-                {{ game.release_year }}
-            </p>
-        </div>
-
-        <!-- ADD TO LIBRARY -->
-        {% if user.is_authenticated %}
-
-            <form
-                id="addToLibraryForm"
-                method="post"
-                action="{% url 'add_to_library' game.id %}"
-            >
-                {% csrf_token %}
-
-                <button
-                    type="submit"
-                    id="addToLibraryButton"
-                    class="add-library-btn"
-                    {% if is_in_library %}disabled{% endif %}
-                >
-                    {% if is_in_library %}
-                        Added to Library
-                    {% else %}
-                        Add to Library
-                    {% endif %}
-                </button>
-            </form>
-
-            <p
-                id="addToLibraryMessage"
-                role="status"
-                aria-live="polite"
-                hidden
-            ></p>
-
-        {% else %}
-
-            <a
-                href="{% url 'login' %}"
-                class="add-library-btn"
-            >
-                Login to Add to Library
-            </a>
-
-        {% endif %}
-
     </div>
 
+  </div>
 
+         
     <!-- REVIEWS -->
     <div class="reviews-section" id="reviews">
 

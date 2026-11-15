@@ -29,63 +29,64 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     // CREATE A GAME CARD
-    
-  function createGameCard(game) {
-    const isExternal = game.source === "igdb";
 
-    const card = document.createElement(
+    function createGameCard(game) {
+     const isExternal = game.source === "igdb";
+
+     const card = document.createElement(
         isExternal ? "div" : "a"
-    );
+     );
 
-    card.className = "search-game-card";
+     card.className = "search-game-card";
 
-    if (!isExternal) {
+     if (!isExternal) {
         card.href = game.url;
-    }
+     }
 
-    // Game cover
-    const imageContainer = document.createElement("div");
-    imageContainer.className = "search-game-image";
+     // Game cover
+     const imageContainer = document.createElement("div");
+     imageContainer.className = "search-game-image";
 
-    if (game.image) {
+     if (game.image) {
         const image = document.createElement("img");
         image.src = game.image;
         image.alt = game.title;
         image.loading = "lazy";
 
-        imageContainer.appendChild(image);
-    } else {
-        imageContainer.textContent = "No image available";
-    }
+         imageContainer.appendChild(image);
+     } else {
+         imageContainer.textContent = "No image available";
+     }
 
-    // Game information
-    const content = document.createElement("div");
-    content.className = "search-game-content";
+      // Game information
+      const content = document.createElement("div");
+      content.className = "search-game-content";
 
-    const genre = document.createElement("span");
-    genre.className = "game-genre";
-    genre.textContent = game.genre || "Unknown";
+      const genre = document.createElement("span");
+      genre.className = "game-genre";
+      genre.textContent = game.genre || "Unknown";
 
-    const title = document.createElement("h2");
-    title.textContent = game.title;
+      const title = document.createElement("h2");
+      title.textContent = game.title;
 
-    const description = document.createElement("p");
-    description.textContent =
+      const description = document.createElement("p");
+      description.textContent =
         `${game.developer || "Unknown"} • ${game.release_year || "N/A"}`;
 
-    content.appendChild(genre);
-    content.appendChild(title);
-    content.appendChild(description);
+      content.appendChild(genre);
+      content.appendChild(title);
+      content.appendChild(description);
 
-    if (isExternal) {
+      // View Game
+      if (isExternal) {
         const button = document.createElement("button");
         button.type = "button";
         button.className = "search-view-game";
-        button.textContent = "Add to GameHub";
+        button.textContent = "View Game";
 
         button.addEventListener("click", async function () {
             button.disabled = true;
-            button.textContent = "Adding...";
+            button.textContent = "Opening...";
 
             try {
                 const csrfToken = document.querySelector(
@@ -109,40 +110,41 @@ document.addEventListener("DOMContentLoaded", function () {
                 );
 
                 if (!response.ok) {
-                    throw new Error("Could not import game");
+                    throw new Error("Could not open game");
                 }
 
                 const data = await response.json();
 
                 if (!data.success || !data.url) {
-                    throw new Error("Invalid import response");
+                    throw new Error("Invalid response");
                 }
 
                 window.location.href = data.url;
 
             } catch (error) {
                 console.error(error);
+
                 button.disabled = false;
                 button.textContent = "Try Again";
             }
         });
 
         content.appendChild(button);
-    } else {
-        const viewGame = document.createElement("span");
-        viewGame.className = "search-view-game";
-        viewGame.textContent = "View Game";
 
-        content.appendChild(viewGame);
+     } else {
+         const viewGame = document.createElement("span");
+         viewGame.className = "search-view-game";
+         viewGame.textContent = "View Game";
+ 
+         content.appendChild(viewGame);
+     }
+
+     card.appendChild(imageContainer);
+     card.appendChild(content);
+ 
+     return card;
     }
 
-    card.appendChild(imageContainer);
-    card.appendChild(content);
-
-    return card;
-  }
- 
-  
 
     // SHOW A MESSAGE WHEN THERE ARE NO RESULTS
     function showMessage(titleText, messageText) {

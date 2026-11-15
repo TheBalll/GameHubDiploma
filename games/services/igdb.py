@@ -78,6 +78,7 @@ def get_games(limit=10, offset=0):
     response.raise_for_status()
     return response.json()
 
+
 def search_games(name, limit=5):
     if not isinstance(name, str) or not name.strip():
         raise ValueError("Game name cannot be empty.")
@@ -92,8 +93,12 @@ def search_games(name, limit=5):
         "Authorization": f"Bearer {token}",
     }
 
-    # Escape characters used by IGDB search strings
-    safe_name = name.strip().replace("\\", "\\\\").replace('"', '\\"')
+    # Escape special characters
+    safe_name = (
+        name.strip()
+        .replace("\\", "\\\\")
+        .replace('"', '\\"')
+    )
 
     query = f"""
         search "{safe_name}";
@@ -112,7 +117,25 @@ def search_games(name, limit=5):
     )
 
     response.raise_for_status()
-    return response.json()
+
+    games = response.json()
+
+    # Normalize the searched title
+    search_name = " ".join(
+        name.casefold().split()
+    )
+
+    # Put exact matches first
+    games.sort(
+        key=lambda game: (
+            " ".join(
+                (game.get("name") or "").casefold().split()
+            ) != search_name,
+            (game.get("name") or "").casefold()
+        )
+    )
+
+    return games
 
 
 def get_game_by_id(igdb_id):

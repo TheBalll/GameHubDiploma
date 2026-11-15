@@ -64,5 +64,12 @@ urlpatterns = [
     "games/import-igdb/<int:igdb_id>/",
     views.import_igdb_game,
     name="import_igdb_game"
-),
+    ),
+    
+    path(
+    "games/import-steam/<int:steam_id>/",
+    views.import_steam_game,
+    name="import_steam_game",
+    ),
+    
 ]

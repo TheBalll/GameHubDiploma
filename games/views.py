@@ -20,6 +20,8 @@ from django.views.decorators.http import require_POST
 from games.services.game_import import import_game_from_igdb
 from datetime import datetime, timezone
 from games.models import Game
+from games.services.steam import search_steam_games
+from games.services.game_import import import_game_from_steam
 
 def home(request):
     return render(request, 'games/home.html')
@@ -502,6 +504,7 @@ def search_games(request):
     })
 
 
+
 def search_results(request):
     query = request.GET.get("q", "").strip()
     genre = request.GET.get("genre", "").strip()
@@ -550,7 +553,8 @@ def search_results(request):
 
     results = []
 
-    # Prepare local games for JavaScript
+    # 1. SQLITE SEARCH
+    
     for game in games:
         results.append({
             "id": game.id,
@@ -566,7 +570,10 @@ def search_results(request):
             "source": "local",
         })
 
-    # Search IGDB if SQLite has no results
+   
+    # 2. IGDB SEARCH FALLBACK
+    
+
     if query and not results and not genre:
         try:
             external_games = search_igdb_games(
@@ -597,7 +604,9 @@ def search_results(request):
                 # Get genres
                 game_genres = [
                     item["name"]
-                    for item in external_game.get("genres", [])
+                    for item in external_game.get(
+                        "genres", []
+                    )
                     if item.get("name")
                 ]
 
@@ -641,8 +650,57 @@ def search_results(request):
                     "source": "igdb",
                 })
 
-        except (requests.RequestException, ValueError, KeyError):
+        except (
+            requests.RequestException,
+            ValueError,
+            KeyError
+        ):
             pass
+
+    
+    # 3. STEAM SEARCH FALLBACK
+  
+
+    # Steam is searched only when SQLite and
+    # IGDB have returned no results.
+
+    if query and not results and not genre:
+        try:
+            steam_games = search_steam_games(
+                query,
+                limit=5
+            )
+
+            for steam_game in steam_games:
+                steam_id = steam_game.get("id")
+                title = steam_game.get("title")
+
+                if not steam_id or not title:
+                    continue
+
+                results.append({
+                    "id": steam_id,
+                    "title": title,
+                    "genre": "Unknown",
+                    "developer": "Unknown",
+                    "release_year": "",
+                    "image": steam_game.get(
+                        "image", ""
+                    ),
+                    "url": None,
+                    "source": "steam",
+                })
+
+        except (
+            requests.RequestException,
+            ValueError,
+            KeyError
+        ):
+            pass
+
+    
+    # RETURN SEARCH RESULTS
+    
 
     return JsonResponse({
         "games": results,
@@ -650,7 +708,6 @@ def search_results(request):
         "count": len(results),
     })
 
-   
 @login_required
 def profile(request):
     user_profile, created = UserProfile.objects.get_or_create(
@@ -818,3 +875,36 @@ def import_igdb_game(request, igdb_id):
             status=503
         )
 
+
+@require_POST
+def import_steam_game(request, steam_id):
+    try:
+        game, created = import_game_from_steam(steam_id)
+
+        if game is None:
+            return JsonResponse(
+                {
+                    "success": False,
+                    "error": "Game not found on Steam.",
+                },
+                status=404,
+            )
+
+        return JsonResponse({
+            "success": True,
+            "created": created,
+            "game_id": game.id,
+            "url": reverse(
+                "game_detail",
+                kwargs={"game_id": game.id}
+            ),
+        })
+
+    except (requests.RequestException, ValueError, KeyError):
+        return JsonResponse(
+            {
+                "success": False,
+                "error": "Unable to import the Steam game.",
+            },
+            status=502,
+        )

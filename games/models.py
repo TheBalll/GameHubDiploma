@@ -15,6 +15,14 @@ class Game(models.Model):
         blank=True
     )
 
+
+    steam_id = models.PositiveIntegerField(
+      unique=True,
+      null=True,
+      blank=True
+    )
+
+
     background_image = models.URLField(
         max_length=500,
         blank=True

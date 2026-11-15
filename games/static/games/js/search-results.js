@@ -30,56 +30,60 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // CREATE A GAME CARD
 
-    function createGameCard(game) {
-     const isExternal = game.source === "igdb";
+    
+  function createGameCard(game) {
+    const isExternal =
+        game.source === "igdb" ||
+        game.source === "steam";
 
-     const card = document.createElement(
+    const card = document.createElement(
         isExternal ? "div" : "a"
-     );
+    );
 
-     card.className = "search-game-card";
+    card.className = "search-game-card";
 
-     if (!isExternal) {
+    if (!isExternal) {
         card.href = game.url;
-     }
+    }
 
-     // Game cover
-     const imageContainer = document.createElement("div");
-     imageContainer.className = "search-game-image";
+    // GAME COVER
+    const imageContainer = document.createElement("div");
+    imageContainer.className = "search-game-image";
 
-     if (game.image) {
+    if (game.image) {
         const image = document.createElement("img");
         image.src = game.image;
         image.alt = game.title;
         image.loading = "lazy";
 
-         imageContainer.appendChild(image);
-     } else {
-         imageContainer.textContent = "No image available";
-     }
+        imageContainer.appendChild(image);
+    } else {
+        imageContainer.textContent = "No image available";
+    }
 
-      // Game information
-      const content = document.createElement("div");
-      content.className = "search-game-content";
+    // GAME INFORMATION
+    const content = document.createElement("div");
+    content.className = "search-game-content";
 
-      const genre = document.createElement("span");
-      genre.className = "game-genre";
-      genre.textContent = game.genre || "Unknown";
+    const genre = document.createElement("span");
+    genre.className = "game-genre";
+    genre.textContent = game.genre || "Unknown";
 
-      const title = document.createElement("h2");
-      title.textContent = game.title;
+    const title = document.createElement("h2");
+    title.textContent = game.title;
 
-      const description = document.createElement("p");
-      description.textContent =
+    const description = document.createElement("p");
+    description.textContent =
         `${game.developer || "Unknown"} • ${game.release_year || "N/A"}`;
 
-      content.appendChild(genre);
-      content.appendChild(title);
-      content.appendChild(description);
+    content.appendChild(genre);
+    content.appendChild(title);
+    content.appendChild(description);
 
-      // View Game
-      if (isExternal) {
+    // VIEW GAME
+    if (isExternal) {
         const button = document.createElement("button");
+
         button.type = "button";
         button.className = "search-view-game";
         button.textContent = "View Game";
@@ -97,20 +101,24 @@ document.addEventListener("DOMContentLoaded", function () {
                     throw new Error("CSRF token not found");
                 }
 
-                const response = await fetch(
-                    `/games/import-igdb/${game.id}/`,
-                    {
-                        method: "POST",
-                        credentials: "same-origin",
-                        headers: {
-                            "X-CSRFToken": csrfToken,
-                            "Accept": "application/json"
-                        }
+                // Choose the correct import endpoint
+                const importUrl = game.source === "steam"
+                    ? `/games/import-steam/${game.id}/`
+                    : `/games/import-igdb/${game.id}/`;
+
+                const response = await fetch(importUrl, {
+                    method: "POST",
+                    credentials: "same-origin",
+                    headers: {
+                        "X-CSRFToken": csrfToken,
+                        "Accept": "application/json"
                     }
-                );
+                });
 
                 if (!response.ok) {
-                    throw new Error("Could not open game");
+                    throw new Error(
+                        `Could not open game (${response.status})`
+                    );
                 }
 
                 const data = await response.json();
@@ -119,6 +127,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     throw new Error("Invalid response");
                 }
 
+                // Open the Game Details page
                 window.location.href = data.url;
 
             } catch (error) {
@@ -131,19 +140,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
         content.appendChild(button);
 
-     } else {
-         const viewGame = document.createElement("span");
-         viewGame.className = "search-view-game";
-         viewGame.textContent = "View Game";
- 
-         content.appendChild(viewGame);
-     }
+    } else {
+        const viewGame = document.createElement("span");
 
-     card.appendChild(imageContainer);
-     card.appendChild(content);
- 
-     return card;
+        viewGame.className = "search-view-game";
+        viewGame.textContent = "View Game";
+
+        content.appendChild(viewGame);
     }
+
+    card.appendChild(imageContainer);
+    card.appendChild(content);
+
+    return card;
+  }
+
 
 
     // SHOW A MESSAGE WHEN THERE ARE NO RESULTS

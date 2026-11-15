@@ -22,6 +22,7 @@ from datetime import datetime, timezone
 from games.models import Game
 from games.services.steam import search_steam_games
 from games.services.game_import import import_game_from_steam
+from django.core.cache import cache
 
 def home(request):
     return render(request, 'games/home.html')
@@ -505,12 +506,13 @@ def search_games(request):
 
 
 
+
 def search_results(request):
     query = request.GET.get("q", "").strip()
     genre = request.GET.get("genre", "").strip()
     sort = request.GET.get("sort", "title")
 
-    # Get available genres from SQLite
+    # Available genres from SQLite
     genres = sorted(
         set(
             Game.objects.exclude(genre="")
@@ -518,32 +520,22 @@ def search_results(request):
         )
     )
 
-    # Start with games from SQLite
+    # Search local games
     games = Game.objects.all()
 
-    # Search ONLY by game title
     if query:
-        games = games.filter(
-            title__icontains=query
-        )
+        games = games.filter(title__icontains=query)
 
-    # Filter by genre
     if genre:
         games = games.filter(genre=genre)
 
-    # Sort games
     if sort == "newest":
-        games = games.order_by(
-            "-release_year", "title"
-        )
+        games = games.order_by("-release_year", "title")
     elif sort == "oldest":
-        games = games.order_by(
-            "release_year", "title"
-        )
+        games = games.order_by("release_year", "title")
     else:
         games = games.order_by("title")
 
-    # Return the normal HTML page
     if request.GET.get("format") != "json":
         return render(
             request,
@@ -552,9 +544,17 @@ def search_results(request):
         )
 
     results = []
+    seen_igdb_ids = set()
+    seen_steam_ids = set()
 
-    # 1. SQLITE SEARCH
-    
+    # Normalize titles for cautious duplicate detection
+    def normalize_title(title):
+        return " ".join((title or "").casefold().split())
+
+    # Keep track of local records
+    local_titles = set()
+
+    # 1. SQLITE
     for game in games:
         results.append({
             "id": game.id,
@@ -570,143 +570,221 @@ def search_results(request):
             "source": "local",
         })
 
-   
-    # 2. IGDB SEARCH FALLBACK
-    
+        local_titles.add(normalize_title(game.title))
 
-    if query and not results and not genre:
-        try:
-            external_games = search_igdb_games(
-                query,
-                limit=5
-            )
+        if game.igdb_id:
+            seen_igdb_ids.add(game.igdb_id)
 
-            for external_game in external_games:
-                igdb_id = external_game.get("id")
-                title = external_game.get("name")
+        if game.steam_id:
+            seen_steam_ids.add(game.steam_id)
 
-                if not igdb_id or not title:
-                    continue
+    # Only search external APIs when there is a query
+    # and no active genre filter.
+    if query and not genre:
+        cache_key = (
+            "gamehub_unified_search_v1:"
+            + query.casefold()
+        )
 
-                # Get cover image
-                cover = external_game.get("cover") or {}
-                image_id = cover.get("image_id")
+        external_results = cache.get(cache_key)
 
-                image_url = ""
+        if external_results is None:
+            external_results = []
 
-                if image_id:
-                    image_url = (
-                        "https://images.igdb.com/igdb/"
-                        "image/upload/"
-                        f"t_cover_big/{image_id}.jpg"
-                    )
-
-                # Get genres
-                game_genres = [
-                    item["name"]
-                    for item in external_game.get(
-                        "genres", []
-                    )
-                    if item.get("name")
-                ]
-
-                genre_text = (
-                    ", ".join(game_genres) or "Unknown"
+            # 2. IGDB
+            try:
+                igdb_games = search_igdb_games(
+                    query,
+                    limit=10
                 )
 
-                # Get developer
-                developer = "Unknown"
+                for item in igdb_games:
+                    igdb_id = item.get("id")
+                    title = item.get("name")
 
-                for company in external_game.get(
-                    "involved_companies", []
-                ):
-                    if company.get("developer"):
-                        developer = (
-                            company.get("company") or {}
-                        ).get("name") or "Unknown"
-                        break
+                    if not igdb_id or not title:
+                        continue
 
-                # Get release year
-                release_year = ""
+                    cover = item.get("cover") or {}
+                    image_id = cover.get("image_id")
 
-                timestamp = external_game.get(
-                    "first_release_date"
+                    image_url = ""
+
+                    if image_id:
+                        image_url = (
+                            "https://images.igdb.com/igdb/"
+                            "image/upload/"
+                            f"t_cover_big/{image_id}.jpg"
+                        )
+
+                    game_genres = [
+                        g["name"]
+                        for g in item.get("genres", [])
+                        if g.get("name")
+                    ]
+
+                    developer = "Unknown"
+
+                    for company in item.get(
+                        "involved_companies", []
+                    ):
+                        if company.get("developer"):
+                            developer = (
+                                company.get("company") or {}
+                            ).get("name") or "Unknown"
+                            break
+
+                    release_year = ""
+
+                    timestamp = item.get(
+                        "first_release_date"
+                    )
+
+                    if timestamp:
+                        release_year = datetime.fromtimestamp(
+                            timestamp,
+                            tz=timezone.utc
+                        ).year
+
+                    external_results.append({
+                        "id": igdb_id,
+                        "title": title,
+                        "genre": (
+                            ", ".join(game_genres)
+                            or "Unknown"
+                        ),
+                        "developer": developer,
+                        "release_year": release_year,
+                        "image": image_url,
+                        "url": None,
+                        "source": "igdb",
+                    })
+
+            except (
+                requests.RequestException,
+                ValueError,
+                KeyError
+            ):
+                pass
+
+            # 3. STEAM
+            try:
+                steam_games = search_steam_games(
+                    query,
+                    limit=10
                 )
 
-                if timestamp:
-                    release_year = datetime.fromtimestamp(
-                        timestamp,
-                        tz=timezone.utc
-                    ).year
+                for item in steam_games:
+                    steam_id = item.get("id")
+                    title = item.get("title")
 
-                results.append({
-                    "id": igdb_id,
-                    "title": title,
-                    "genre": genre_text,
-                    "developer": developer,
-                    "release_year": release_year,
-                    "image": image_url,
-                    "url": None,
-                    "source": "igdb",
-                })
+                    if not steam_id or not title:
+                        continue
 
-        except (
-            requests.RequestException,
-            ValueError,
-            KeyError
-        ):
-            pass
+                    external_results.append({
+                        "id": steam_id,
+                        "title": title,
+                        "genre": "Unknown",
+                        "developer": "Unknown",
+                        "release_year": "",
+                        "image": item.get("image", ""),
+                        "url": None,
+                        "source": "steam",
+                    })
 
-    
-    # 3. STEAM SEARCH FALLBACK
-  
+            except (
+                requests.RequestException,
+                ValueError,
+                KeyError
+            ):
+                pass
 
-    # Steam is searched only when SQLite and
-    # IGDB have returned no results.
-
-    if query and not results and not genre:
-        try:
-            steam_games = search_steam_games(
-                query,
-                limit=5
+            cache.set(
+                cache_key,
+                external_results,
+                timeout=300
             )
 
-            for steam_game in steam_games:
-                steam_id = steam_game.get("id")
-                title = steam_game.get("title")
+        # 4. MERGE RESULTS
+        # Prefer local games over external copies.
+        for item in external_results:
+            source = item["source"]
+            title_key = normalize_title(item["title"])
 
-                if not steam_id or not title:
+            if source == "igdb":
+                if item["id"] in seen_igdb_ids:
                     continue
 
-                results.append({
-                    "id": steam_id,
-                    "title": title,
-                    "genre": "Unknown",
-                    "developer": "Unknown",
-                    "release_year": "",
-                    "image": steam_game.get(
-                        "image", ""
-                    ),
-                    "url": None,
-                    "source": "steam",
-                })
+            if source == "steam":
+                if item["id"] in seen_steam_ids:
+                    continue
 
-        except (
-            requests.RequestException,
-            ValueError,
-            KeyError
-        ):
-            pass
+            # Conservative title deduplication:
+            # only suppress an external result when an
+            # identical title is already represented.
+            if title_key in local_titles:
+                continue
 
-    
-    # RETURN SEARCH RESULTS
-    
+            results.append(item)
+            local_titles.add(title_key)
+
+            if source == "igdb":
+                seen_igdb_ids.add(item["id"])
+
+            if source == "steam":
+                seen_steam_ids.add(item["id"])
+
+    # 5. SORT RESULTS
+    search_key = normalize_title(query)
+
+    def sort_key(game):
+        title_key = normalize_title(game["title"])
+
+        exact_match = title_key == search_key
+        starts_with = title_key.startswith(search_key)
+
+        if sort == "newest":
+            return (
+                not exact_match,
+                not starts_with,
+                -(game["release_year"] or 0),
+                title_key,
+            )
+
+        if sort == "oldest":
+            return (
+                not exact_match,
+                not starts_with,
+                game["release_year"] or 9999,
+                title_key,
+            )
+
+        return (
+            not exact_match,
+            not starts_with,
+            title_key,
+        )
+
+
+    if query:
+        results.sort(key=sort_key)
+
+    # PAGINATION - 12 games per page
+    paginator = Paginator(results, 12)
+
+    page_number = request.GET.get("page", 1)
+    page_obj = paginator.get_page(page_number)
 
     return JsonResponse({
-        "games": results,
+        "games": list(page_obj.object_list),
         "genres": genres,
-        "count": len(results),
+        "count": paginator.count,
+        "page": page_obj.number,
+        "total_pages": paginator.num_pages,
+        "has_next": page_obj.has_next(),
     })
+
+
 
 @login_required
 def profile(request):

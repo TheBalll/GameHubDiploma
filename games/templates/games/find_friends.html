@@ -1,0 +1,60 @@
+
+{% extends 'games/base.html' %}
+
+{% block title %}Find Friends | GameHub{% endblock %}
+
+{% block content %}
+<section class="find-friends-page">
+
+    <div class="find-friends-header">
+        <h1>Find Friends</h1>
+        <p>Discover players and grow your gaming community.</p>
+    </div>
+
+    <form method="get"
+          action="{% url 'find_friends' %}"
+          class="find-friends-search">
+
+        <input
+            type="search"
+            name="q"
+            value="{{ query }}"
+            placeholder="Search by username..."
+        >
+
+        <button type="submit">Search</button>
+    </form>
+
+    <div class="find-friends-results">
+        <h2>Players</h2>
+        <span>{{ users|length }} players found</span>
+    </div>
+
+    <div class="find-friends-list">
+        {% for player in users %}
+            <div class="find-friends-card">
+
+                <div class="find-friends-avatar">
+                    {{ player.username|first|upper }}
+                </div>
+
+                <div class="find-friends-info">
+                    <h3>{{ player.username }}</h3>
+                    <p>GameHub Member</p>
+                </div>
+
+                <a href="{% url 'public_profile' user_id=player.id %}"
+                   class="find-friends-button">
+                    View Profile
+                </a>
+
+            </div>
+        {% empty %}
+            <p class="find-friends-empty">
+                No players found.
+            </p>
+        {% endfor %}
+    </div>
+
+</section>
+{% endblock %}

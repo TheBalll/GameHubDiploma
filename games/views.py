@@ -23,6 +23,12 @@ from games.models import Game
 from games.services.steam import search_steam_games
 from games.services.game_import import import_game_from_steam
 from django.core.cache import cache
+from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib import messages
+from .models import FriendRequest
+from django.db import transaction
+from django.views.decorators.cache import never_cache
 
 def home(request):
     return render(request, 'games/home.html')
@@ -873,25 +879,46 @@ def edit_profile(request):
         "profile_form": profile_form
     })
 
+
 @login_required
 def public_profile(request, user_id):
-    # Намираме потребителя, чийто профил искаме да отворим
+    # Намираме потребителя
     profile_user = get_object_or_404(User, id=user_id)
 
-    # Извличаме допълнителната информация за профила
+    # Информация за профила
     user_profile = UserProfile.objects.filter(
         user=profile_user
     ).first()
 
-    # Извличаме ревютата на потребителя
+    # Ревюта
     user_reviews = Review.objects.filter(
         user=profile_user
     ).select_related("game").order_by("-created_at")
 
-    # Извличаме игрите от неговата библиотека
+    # Лична библиотека
     library_entries = LibraryEntry.objects.filter(
         user=profile_user
     ).select_related("game")
+
+    # Проверяваме приятелството между двамата потребители
+    friendship = None
+    friendship_status = "none"
+
+    if request.user != profile_user:
+        friendship = FriendRequest.objects.filter(
+            Q(sender=request.user, receiver=profile_user) |
+            Q(sender=profile_user, receiver=request.user)
+        ).order_by("-created_at").first()
+
+        if friendship:
+            if friendship.status == FriendRequest.Status.ACCEPTED:
+                friendship_status = "friends"
+
+            elif friendship.status == FriendRequest.Status.PENDING:
+                if friendship.sender_id == request.user.id:
+                    friendship_status = "sent"
+                else:
+                    friendship_status = "received"
 
     context = {
         "profile_user": profile_user,
@@ -899,10 +926,13 @@ def public_profile(request, user_id):
         "user_reviews": user_reviews,
         "library_entries": library_entries,
         "reviews_count": user_reviews.count(),
-        "games_count": library_entries.count()
+        "games_count": library_entries.count(),
+        "friendship": friendship,
+        "friendship_status": friendship_status,
     }
 
     return render(request, "games/public_profile.html", context)
+
 
 
 @login_required
@@ -986,3 +1016,275 @@ def import_steam_game(request, steam_id):
             },
             status=502,
         )
+
+
+@login_required
+@require_POST
+def send_friend_request(request, user_id):
+    User = get_user_model()
+
+    receiver = get_object_or_404(User, pk=user_id)
+
+    # Prevent users from sending requests to themselves
+    if receiver == request.user:
+        messages.error(
+            request,
+            "You cannot send a friend request to yourself."
+        )
+        return redirect("public_profile", user_id=receiver.id)
+
+    # Check for an existing outgoing request
+    existing_request = FriendRequest.objects.filter(
+        sender=request.user,
+        receiver=receiver
+    ).first()
+
+    if existing_request:
+
+        if existing_request.status == FriendRequest.Status.ACCEPTED:
+            messages.info(
+                request,
+                "You are already friends with this user."
+            )
+
+        elif existing_request.status == FriendRequest.Status.PENDING:
+            messages.info(
+                request,
+                "You have already sent a friend request."
+            )
+
+        elif existing_request.status == FriendRequest.Status.REJECTED:
+            # Reuse the rejected request instead of creating a duplicate
+            existing_request.status = FriendRequest.Status.PENDING
+            existing_request.save(update_fields=["status"])
+
+            messages.success(
+                request,
+                "Friend request sent successfully."
+            )
+
+        return redirect("public_profile", user_id=receiver.id)
+
+    # Check for an existing incoming request
+    reverse_request = FriendRequest.objects.filter(
+        sender=receiver,
+        receiver=request.user
+    ).first()
+
+    if reverse_request:
+
+        if reverse_request.status == FriendRequest.Status.ACCEPTED:
+            messages.info(
+                request,
+                "You are already friends with this user."
+            )
+
+        elif reverse_request.status == FriendRequest.Status.PENDING:
+            messages.info(
+                request,
+                "This user has already sent you a friend request."
+            )
+
+        elif reverse_request.status == FriendRequest.Status.REJECTED:
+            # Reuse the rejected request as a new outgoing request
+            reverse_request.delete()
+
+            FriendRequest.objects.create(
+                sender=request.user,
+                receiver=receiver
+            )
+
+            messages.success(
+                request,
+                "Friend request sent successfully."
+            )
+
+        return redirect("public_profile", user_id=receiver.id)
+
+    # Create a new friend request
+    FriendRequest.objects.create(
+        sender=request.user,
+        receiver=receiver
+    )
+
+    messages.success(
+        request,
+        "Friend request sent successfully."
+    )
+
+    return redirect("public_profile", user_id=receiver.id)
+
+
+@login_required
+@require_POST
+def accept_friend_request(request, request_id):
+    with transaction.atomic():
+        friend_request = get_object_or_404(
+            FriendRequest.objects.select_for_update(),
+            pk=request_id,
+            receiver=request.user,
+            status=FriendRequest.Status.PENDING
+        )
+
+        friend_request.status = FriendRequest.Status.ACCEPTED
+        friend_request.save(update_fields=["status"])
+
+    messages.success(
+        request,
+        "Friend request accepted successfully."
+    )
+
+    return redirect("friend_requests_page")
+
+@login_required
+@require_POST
+def decline_friend_request(request, request_id):
+    with transaction.atomic():
+        friend_request = get_object_or_404(
+            FriendRequest.objects.select_for_update(),
+            pk=request_id,
+            receiver=request.user,
+            status=FriendRequest.Status.PENDING
+        )
+
+        friend_request.status = FriendRequest.Status.REJECTED
+        friend_request.save(update_fields=["status"])
+
+    messages.success(
+        request,
+        "Friend request declined."
+    )
+
+    return redirect("friend_requests_page")
+
+
+@login_required
+def friend_requests_page(request):
+    pending_requests = (
+        FriendRequest.objects
+        .filter(
+            receiver=request.user,
+            status=FriendRequest.Status.PENDING
+        )
+        .select_related("sender")
+        .order_by("-created_at")
+    )
+
+    return render(
+        request,
+        "games/friend_requests.html",
+        {
+            "pending_requests": pending_requests
+        }
+    )
+
+@login_required
+def find_friends(request):
+    User = get_user_model()
+
+    query = request.GET.get("q", "").strip()
+
+    users = User.objects.exclude(
+        pk=request.user.pk
+    ).order_by("username")
+
+    if query:
+        users = users.filter(
+            Q(username__icontains=query)
+        )
+
+    return render(
+        request,
+        "games/find_friends.html",
+        {
+            "users": users,
+            "query": query,
+        }
+    )
+
+
+@login_required
+@never_cache
+def my_friends(request):
+    # Get all accepted friendships involving the current user
+    friendships = FriendRequest.objects.filter(
+        Q(sender=request.user) |
+        Q(receiver=request.user),
+        status=FriendRequest.Status.ACCEPTED
+    ).select_related(
+        "sender",
+        "receiver",
+        "sender__profile",
+        "receiver__profile"
+    ).order_by("-created_at")
+
+    # Build the friends list
+    friends = []
+
+    for friendship in friendships:
+        if friendship.sender_id == request.user.id:
+            friend = friendship.receiver
+        else:
+            friend = friendship.sender
+
+        friends.append(friend)
+
+    return render(
+        request,
+        "games/my_friends.html",
+        {
+            "friends": friends,
+            "friends_count": len(friends),
+        }
+    )
+
+@login_required
+@require_POST
+def cancel_friend_request(request, request_id):
+    friend_request = get_object_or_404(
+        FriendRequest,
+        id=request_id,
+        sender=request.user,
+        status=FriendRequest.Status.PENDING
+    )
+
+    friend_request.delete()
+
+    messages.success(
+        request,
+        "Friend request cancelled successfully."
+    )
+
+    return redirect(
+        "public_profile",
+        user_id=friend_request.receiver_id
+    )
+
+@login_required
+@require_POST
+def remove_friend(request, user_id):
+    User = get_user_model()
+
+    friend_user = get_object_or_404(User, pk=user_id)
+
+    # Find an accepted friendship in either direction
+    friendship = FriendRequest.objects.filter(
+        Q(sender=request.user, receiver=friend_user) |
+        Q(sender=friend_user, receiver=request.user),
+        status=FriendRequest.Status.ACCEPTED
+    ).first()
+
+    if friendship:
+        friendship.delete()
+
+        messages.success(
+            request,
+            "Friend removed successfully."
+        )
+    else:
+        messages.error(
+            request,
+            "You are not friends with this user."
+        )
+
+    return redirect("public_profile", user_id=friend_user.id)

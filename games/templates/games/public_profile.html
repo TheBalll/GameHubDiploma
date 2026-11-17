@@ -14,25 +14,17 @@
 
         <!-- PROFILE AVATAR -->
         <div class="profile-avatar">
-
             {% if user_profile.avatar %}
-
                 <img
                     src="{{ user_profile.avatar.url }}"
                     alt="Profile picture"
                     class="profile-avatar-image"
                 >
-
             {% elif user_profile.profile_name %}
-
                 {{ user_profile.profile_name|first|upper }}
-
             {% else %}
-
                 {{ profile_user.username|first|upper }}
-
             {% endif %}
-
         </div>
 
         <!-- PROFILE INFORMATION -->
@@ -40,29 +32,34 @@
 
             <p class="profile-label">PLAYER PROFILE</p>
 
-            <!-- PROFILE NAME -->
-            <h1>
-                {{ user_profile.profile_name|default:profile_user.username }}
-            </h1>
+            <!-- PROFILE NAME AND FRIENDSHIP STATUS -->
+            <div class="profile-name-row">
+                <h1>
+                    {{ user_profile.profile_name|default:profile_user.username }}
+                </h1>
 
-            <!-- LOGIN USERNAME -->
+                {% if friendship_status == "friends" %}
+                    <span class="friendship-badge">
+                        <span class="friendship-badge-icon">✓</span>
+                        Friends
+                    </span>
+                {% endif %}
+            </div>
+
+            <!-- USERNAME -->
             <p class="profile-username">
                 @{{ profile_user.username }}
             </p>
 
             <!-- BIO -->
             {% if user_profile.bio %}
-
                 <p class="profile-bio">
                     {{ user_profile.bio }}
                 </p>
-
             {% else %}
-
                 <p class="profile-bio">
                     GameHub Member
                 </p>
-
             {% endif %}
 
             <!-- JOIN DATE -->
@@ -70,13 +67,117 @@
                 Joined {{ profile_user.date_joined|date:"d M Y" }}
             </p>
 
-            <!-- EDIT PROFILE - OWNER ONLY -->
-            {% if user.id == profile_user.id %}
+            <!-- PROFILE ACTIONS -->
+            {% if user.is_authenticated %}
 
-                <a href="{% url 'edit_profile' %}"
-                   class="profile-edit-btn">
-                    Edit Profile
-                </a>
+                {% if user.id == profile_user.id %}
+
+                    <!-- EDIT OWN PROFILE -->
+                    <a
+                        href="{% url 'edit_profile' %}"
+                        class="profile-edit-btn"
+                    >
+                        Edit Profile
+                    </a>
+                    {% elif friendship_status == "friends" %}
+
+                     <!-- REMOVE FRIEND -->
+
+                      <form
+                           method="post"
+                           action="{% url 'remove_friend' profile_user.id %}"
+                           class="friend-add-form"
+                        >
+                           {% csrf_token %}
+
+                           <button
+                             type="submit"
+                             class="friend-secondary-btn"
+                            >
+                            Remove Friend
+                           </button>
+                       </form>
+                {% elif friendship_status == "sent" %}
+
+                    <!-- OUTGOING FRIEND REQUEST -->
+                    <div class="friend-actions">
+
+                        <!-- OUTGOING FRIEND REQUEST STATUS -->
+                        <div class="friend-pending-status">
+                           <span>Request Pending</span>
+                        </div>
+
+                        <form
+                            method="post"
+                            action="{% url 'cancel_friend_request' friendship.id %}"
+                        >
+                            {% csrf_token %}
+
+                            <button
+                                type="submit"
+                                class="friend-secondary-btn"
+                            >
+                                Cancel Request
+                            </button>
+                        </form>
+
+                    </div>
+
+                {% elif friendship_status == "received" %}
+
+                    <!-- INCOMING FRIEND REQUEST -->
+                    <div class="friend-actions">
+
+                        <form
+                            method="post"
+                            action="{% url 'accept_friend_request' friendship.id %}"
+                        >
+                            {% csrf_token %}
+
+                            <button
+                                type="submit"
+                                class="friend-primary-btn"
+                            >
+                                Accept Request
+                            </button>
+                        </form>
+
+                        <form
+                            method="post"
+                            action="{% url 'decline_friend_request' friendship.id %}"
+                        >
+                            {% csrf_token %}
+
+                            <button
+                                type="submit"
+                                class="friend-secondary-btn"
+                            >
+                                Decline
+                            </button>
+                        </form>
+
+                    </div>
+
+                {% else %}
+
+                    <!-- SEND FRIEND REQUEST -->
+                    <form
+                        method="post"
+                        action="{% url 'send_friend_request' profile_user.id %}"
+                        class="friend-add-form"
+                    >
+                        {% csrf_token %}
+
+                        <button
+                            type="submit"
+                            class="friend-primary-btn"
+                        >
+                            <span aria-hidden="true">+</span>
+                            Add Friend
+                        </button>
+                    </form>
+
+                {% endif %}
 
             {% endif %}
 
@@ -174,7 +275,6 @@
                         {{ review.created_at|date:"d M Y" }}
                     </small>
 
-
                     <!-- ADMIN REVIEW ACTIONS -->
                     {% if perms.games.delete_review %}
 
@@ -184,7 +284,6 @@
                                 method="post"
                                 action="{% url 'delete_review_from_profile' review.id %}"
                             >
-
                                 {% csrf_token %}
 
                                 <button
@@ -224,7 +323,6 @@
     class="delete-modal-overlay"
     hidden
 >
-
     <div
         class="delete-modal"
         role="dialog"
@@ -266,7 +364,6 @@
         </div>
 
     </div>
-
 </div>
 
 
@@ -284,7 +381,6 @@
         "confirmProfileDelete"
     );
 
-
     // OPEN DELETE MODAL
     function openProfileDeleteModal(button) {
 
@@ -296,9 +392,7 @@
         profileDeleteModal.querySelector(
             ".delete-modal-cancel"
         ).focus();
-
     }
-
 
     // CLOSE DELETE MODAL
     function closeProfileDeleteModal() {
@@ -314,9 +408,7 @@
             lastProfileDeleteButton.focus();
             lastProfileDeleteButton = null;
         }
-
     }
-
 
     // CONFIRM DELETE REVIEW
     function confirmProfileDelete() {
@@ -330,9 +422,7 @@
 
         // Submit the POST form with Django CSRF protection
         selectedProfileReviewForm.requestSubmit();
-
     }
-
 
     // CLOSE MODAL WHEN CLICKING OUTSIDE
     profileDeleteModal.addEventListener(
@@ -342,10 +432,8 @@
             if (event.target === this) {
                 closeProfileDeleteModal();
             }
-
         }
     );
-
 
     // CLOSE MODAL WITH ESCAPE
     document.addEventListener(
@@ -358,7 +446,6 @@
             ) {
                 closeProfileDeleteModal();
             }
-
         }
     );
 

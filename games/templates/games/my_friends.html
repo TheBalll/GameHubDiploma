@@ -1,0 +1,122 @@
+
+{% extends 'games/base.html' %}
+
+{% block title %}
+    My Friends | GameHub
+{% endblock %}
+
+{% block content %}
+
+<section class="friends-page">
+
+    <!-- PAGE HEADER -->
+    <div class="friends-page-header">
+        <div>
+            <p class="friends-page-label">YOUR NETWORK</p>
+
+            <h1>My Friends</h1>
+
+            <p class="friends-page-description">
+                Stay connected with your gaming friends.
+            </p>
+        </div>
+    </div>
+
+    <!-- FRIENDS COUNT -->
+    <div class="friends-count-bar">
+        <span>Friends</span>
+
+        <span class="friends-count-number">
+            {{ friends_count }}
+        </span>
+    </div>
+
+    <!-- FRIENDS GRID -->
+    {% if friends %}
+
+        <div class="friends-grid">
+
+            {% for friend in friends %}
+
+                <div class="friend-card">
+
+                    <!-- FRIEND AVATAR -->
+                    <div class="friend-card-avatar">
+
+                        {% if friend.profile.avatar %}
+
+                            <img
+                                src="{{ friend.profile.avatar.url }}"
+                                alt="{{ friend.username }}'s avatar"
+                                class="friend-card-avatar-image"
+                            >
+
+                        {% elif friend.profile.profile_name %}
+
+                            {{ friend.profile.profile_name|first|upper }}
+
+                        {% else %}
+
+                            {{ friend.username|first|upper }}
+
+                        {% endif %}
+
+                    </div>
+
+                    <!-- FRIEND INFORMATION -->
+                    <div class="friend-card-info">
+
+                        <h3>
+                            {{ friend.profile.profile_name|default:friend.username }}
+                        </h3>
+
+                        <p>
+                            @{{ friend.username }}
+                        </p>
+
+                    </div>
+
+                    <!-- FRIEND ACTION -->
+                    <a
+                        href="{% url 'public_profile' user_id=friend.id %}"
+                        class="friend-card-profile-btn"
+                    >
+                        View Profile
+                    </a>
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+    {% else %}
+
+        <!-- EMPTY STATE -->
+        <div class="friends-empty-state">
+
+            <div class="friends-empty-icon">
+                <span aria-hidden="true">+</span>
+            </div>
+
+            <h2>No friends yet</h2>
+
+            <p>
+                You haven't added any friends yet.
+                Discover other players and start connecting.
+            </p>
+
+            <a
+                href="{% url 'find_friends' %}"
+                class="friends-find-btn"
+            >
+                Find Friends
+            </a>
+
+        </div>
+
+    {% endif %}
+
+</section>
+
+{% endblock %}

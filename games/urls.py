@@ -72,4 +72,52 @@ urlpatterns = [
     name="import_steam_game",
     ),
     
+    path(
+    "friends/send/<int:user_id>/",
+    views.send_friend_request,
+    name="send_friend_request"
+    ),
+
+
+  path(
+    "friends/accept/<int:request_id>/",
+    views.accept_friend_request,
+    name="accept_friend_request"
+  ),
+
+  path(
+    "friends/decline/<int:request_id>/",
+    views.decline_friend_request,
+    name="decline_friend_request"
+  ),
+
+  path(
+    "friends/requests/",
+    views.friend_requests_page,
+    name="friend_requests_page"
+  ),
+
+   path(
+    "friends/find/",
+    views.find_friends,
+    name="find_friends"
+  ),
+
+  path(
+    "friends/cancel/<int:request_id>/",
+    views.cancel_friend_request,
+    name="cancel_friend_request"
+  ),
+
+  path(
+    "friends/remove/<int:user_id>/",
+    views.remove_friend,
+    name="remove_friend"
+  ),
+
+  path(
+    "friends/",
+    views.my_friends,
+    name="my_friends"
+  ),
 ]

@@ -1,0 +1,88 @@
+
+{% extends 'games/base.html' %}
+
+{% block title %}
+Friend Requests | GameHub
+{% endblock %}
+
+{% block content %}
+
+<section class="profile-page">
+
+    <div class="profile-section">
+
+        <div class="profile-section-header">
+            <h2>Friend Requests</h2>
+        </div>
+
+        <div class="profile-items">
+
+            {% for friend_request in pending_requests %}
+
+                <div class="profile-item">
+
+                    <h3>
+                        {{ friend_request.sender.username }}
+                    </h3>
+
+                    <p>
+                        Sent you a friend request
+                    </p>
+
+                    <small>
+                        {{ friend_request.created_at|date:"d M Y" }}
+                    </small>
+
+                    <div class="friend-request-actions">
+
+                        <!-- ACCEPT -->
+                        <form
+                            method="post"
+                            action="{% url 'accept_friend_request' friend_request.id %}"
+                        >
+                            {% csrf_token %}
+
+                            <button
+                                type="submit"
+                                class="profile-edit-btn"
+                            >
+                                Accept
+                            </button>
+
+                        </form>
+
+                        <!-- DECLINE -->
+                        <form
+                            method="post"
+                            action="{% url 'decline_friend_request' friend_request.id %}"
+                        >
+                            {% csrf_token %}
+
+                            <button
+                                type="submit"
+                                class="profile-edit-btn"
+                            >
+                                Decline
+                            </button>
+
+                        </form>
+
+                    </div>
+
+                </div>
+
+            {% empty %}
+
+                <p class="profile-empty">
+                    You have no pending friend requests.
+                </p>
+
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}

@@ -1,0 +1,124 @@
+
+{% extends 'games/base.html' %}
+{% load static %}
+
+{% block title %}Steam Connection | GameHub{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'games/css/steam-settings.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<section class="steam-page">
+
+    <div class="steam-page-header">
+        <p class="steam-eyebrow">ACCOUNT INTEGRATIONS</p>
+
+        <h1>Steam Connection</h1>
+
+        <p>
+            Connect your Steam account to bring your
+            gaming collection into GameHub.
+        </p>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="steam-message">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="steam-panel">
+
+        <div class="steam-panel-heading">
+
+            <div class="steam-symbol">S</div>
+
+            <div>
+                <h2>Steam Account</h2>
+                <p>Connect your gaming identity</p>
+            </div>
+
+        </div>
+
+        {% if steam_account %}
+
+            <!-- CONNECTED ACCOUNT -->
+            <div class="steam-status steam-status-connected">
+                <span class="steam-status-dot"></span>
+                Connected
+            </div>
+
+            <div class="steam-account-details">
+
+                <span>Steam ID</span>
+
+                <strong>
+                    {{ steam_account.steam_id }}
+                </strong>
+
+                <span>Connected on</span>
+
+                <strong>
+                    {{ steam_account.connected_at|date:"M d, Y" }}
+                </strong>
+
+            </div>
+
+            <a
+                href="https://steamcommunity.com/profiles/{{ steam_account.steam_id }}/"
+                class="steam-action-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+            >
+                View Steam Profile
+            </a>
+
+            <p class="steam-note">
+                Your Steam account is connected.
+                Library synchronization will be added next.
+            </p>
+
+        {% else %}
+
+            <!-- DISCONNECTED ACCOUNT -->
+            <div class="steam-status">
+                <span class="steam-status-dot"></span>
+                Not Connected
+            </div>
+
+            <p class="steam-description">
+                Connect securely through Steam to prepare
+                your gaming library for synchronization.
+            </p>
+
+            <form
+                method="post"
+                action="{% url 'steam_connect' %}"
+            >
+                {% csrf_token %}
+
+                <button
+                    type="submit"
+                    class="steam-action-btn"
+                >
+                    Connect Steam Account
+                </button>
+
+            </form>
+
+            <p class="steam-note">
+                Authentication takes place on Steam.
+                GameHub will never ask for your Steam password.
+            </p>
+
+        {% endif %}
+
+    </div>
+
+</section>
+
+{% endblock %}

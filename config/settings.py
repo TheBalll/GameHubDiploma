@@ -137,3 +137,9 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # IGDB API CONFIGURATION
 IGDB_CLIENT_ID = os.getenv("IGDB_CLIENT_ID", "")
 IGDB_CLIENT_SECRET = os.getenv("IGDB_CLIENT_SECRET", "")
+
+# STEAM INTEGRATION
+STEAM_OPENID_ENDPOINT = "https://steamcommunity.com/openid/login"
+
+# Used later for Steam library synchronization
+STEAM_API_KEY = os.getenv("STEAM_API_KEY", "")

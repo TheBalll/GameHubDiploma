@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import steam_views
 
 
 urlpatterns = [
@@ -119,5 +120,25 @@ urlpatterns = [
     "friends/",
     views.my_friends,
     name="my_friends"
+  ),
+
+  # STEAM ACCOUNT CONNECTION
+
+  path(
+    "steam/",
+    steam_views.steam_settings_page,
+    name="steam_settings"
+  ),
+
+  path(
+    "steam/connect/",
+    steam_views.steam_connect,
+    name="steam_connect"
+  ),
+
+  path(
+    "steam/callback/",
+    steam_views.steam_callback,
+    name="steam_callback"
   ),
 ]

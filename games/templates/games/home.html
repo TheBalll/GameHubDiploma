@@ -2,61 +2,499 @@
 {% extends 'games/base.html' %}
 {% load static %}
 
-{% block title %}Home | GameHub{% endblock %}
+{% block title %}Discover Games | GameHub{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'games/css/home-redesign.css' %}">
+{% endblock %}
 
 {% block content %}
 
-<section class="hero-banner">
+<div class="gh-home">
 
-    <!-- MAIN CONTENT -->
-    <div class="hero-banner-content">
+    
+ <!-- DYNAMIC FEATURED GAME -->
+ <section class="gh-hero">
 
-        <p class="hero-banner-label">
-            YOUR NEXT ADVENTURE STARTS HERE
+    {% if featured_game %}
+
+        <!-- DYNAMIC BACKGROUND -->
+        <img
+            src="{{ featured_game.background_image }}"
+            alt=""
+            class="gh-hero-background"
+        >
+
+        <!-- FEATURED GAME POSTER -->
+        <div class="gh-hero-poster">
+            <img
+                src="{{ featured_game.background_image }}"
+                alt="{{ featured_game.title }} cover"
+            >
+        </div>
+
+    {% endif %}
+
+    <!-- HERO CONTENT -->
+    <div class="gh-hero-content">
+
+        <p class="gh-eyebrow">
+            <span class="gh-live-dot"></span>
+            FEATURED GAME
         </p>
 
-        <h1>
-            Welcome to <span>GameHub.</span><br>
-            Your world. Your games.
-        </h1>
+        {% if featured_game %}
 
-        <p class="hero-banner-description">
-            Discover games, share your reviews and connect with
-            other gamers. Every great game has a story.
-            Share yours.
+            <!-- DYNAMIC GAME TITLE -->
+            <h1 class="gh-hero-game-title">
+                {{ featured_game.title }}
+            </h1>
+
+            <!-- DYNAMIC GAME DESCRIPTION -->
+            <p class="gh-hero-description">
+                {{ featured_game.description|default:"Discover this game on GameHub."|truncatewords:35 }}
+            </p>
+
+            <!-- GAME METADATA -->
+            <div class="gh-hero-meta">
+
+                {% if featured_game.genre %}
+                    <span class="gh-hero-genre">
+                        {{ featured_game.genre|truncatechars:45 }}
+                    </span>
+                {% endif %}
+
+                {% if featured_game.release_year %}
+                    <span class="gh-hero-year">
+                        {{ featured_game.release_year }}
+                    </span>
+                {% endif %}
+
+            </div>
+
+            <!-- HERO ACTIONS -->
+            <div class="gh-hero-actions">
+
+                <a
+                    href="{% url 'game_detail' featured_game.id %}"
+                    class="gh-button gh-button-primary"
+                >
+                    View Game
+                    <span aria-hidden="true">↗</span>
+                </a>
+
+                <a
+                    href="{% url 'games_list' %}"
+                    class="gh-button gh-button-secondary"
+                >
+                    Explore Games
+                    <span aria-hidden="true">→</span>
+                </a>
+
+            </div>
+
+        {% else %}
+
+            <!-- FALLBACK WHEN DATABASE IS EMPTY -->
+            <h1>
+                Discover your next
+                <span>favorite game.</span>
+            </h1>
+
+            <p class="gh-hero-description">
+                Explore incredible worlds, discover new games
+                and connect with players.
+            </p>
+
+            <div class="gh-hero-actions">
+
+                <a
+                    href="{% url 'games_list' %}"
+                    class="gh-button gh-button-primary"
+                >
+                    Explore Games
+                </a>
+
+            </div>
+
+        {% endif %}
+
+        <p class="gh-hero-footnote">
+            Discover games. Connect gamers.
         </p>
 
-        <!-- BUTTONS -->
-        <div class="hero-banner-buttons">
+    </div>
 
-            <a href="{% url 'games_list' %}" class="primary-btn">
-                Explore Games ↗
+ </section>
+
+
+    <!-- QUICK ACCESS -->
+    <nav class="gh-shortcuts" aria-label="Explore GameHub">
+
+        <!-- DISCOVER GAMES -->
+        <a
+            href="{% url 'games_list' %}"
+            class="gh-shortcut gh-shortcut-purple"
+        >
+
+            <span class="gh-shortcut-symbol">01</span>
+
+            <span class="gh-shortcut-copy">
+                <strong>Discover Games</strong>
+                <small>Explore the full catalog</small>
+            </span>
+
+            <span class="gh-shortcut-arrow">↗</span>
+
+        </a>
+
+        {% if user.is_authenticated %}
+
+            <!-- MY LIBRARY -->
+            <a
+                href="{% url 'library' %}"
+                class="gh-shortcut gh-shortcut-cyan"
+            >
+
+                <span class="gh-shortcut-symbol">02</span>
+
+                <span class="gh-shortcut-copy">
+                    <strong>My Library</strong>
+                    <small>Your personal collection</small>
+                </span>
+
+                <span class="gh-shortcut-arrow">↗</span>
+
             </a>
 
-            <a href="#" class="secondary-btn">
-                Join Community →
+            <!-- FIND GAMERS -->
+            <a
+                href="{% url 'find_friends' %}"
+                class="gh-shortcut gh-shortcut-pink"
+            >
+
+                <span class="gh-shortcut-symbol">03</span>
+
+                <span class="gh-shortcut-copy">
+                    <strong>Find Gamers</strong>
+                    <small>Connect with other players</small>
+                </span>
+
+                <span class="gh-shortcut-arrow">↗</span>
+
+            </a>
+
+        {% else %}
+
+            <!-- LOGIN TO LIBRARY -->
+            <a
+                href="{% url 'login' %}"
+                class="gh-shortcut gh-shortcut-cyan"
+            >
+
+                <span class="gh-shortcut-symbol">02</span>
+
+                <span class="gh-shortcut-copy">
+                    <strong>My Library</strong>
+                    <small>Sign in to see your collection</small>
+                </span>
+
+                <span class="gh-shortcut-arrow">↗</span>
+
+            </a>
+
+            <!-- JOIN GAMEHUB -->
+            <a
+                href="{% url 'register' %}"
+                class="gh-shortcut gh-shortcut-pink"
+            >
+
+                <span class="gh-shortcut-symbol">03</span>
+
+                <span class="gh-shortcut-copy">
+                    <strong>Find Gamers</strong>
+                    <small>Join to make new friends</small>
+                </span>
+
+                <span class="gh-shortcut-arrow">↗</span>
+
+            </a>
+
+        {% endif %}
+
+        <!-- UPCOMING GAMES PLACEHOLDER -->
+        <div class="gh-shortcut gh-shortcut-orange gh-shortcut-disabled">
+
+            <span class="gh-shortcut-symbol">04</span>
+
+            <span class="gh-shortcut-copy">
+                <strong>Upcoming Games</strong>
+                <small>Coming in a future update</small>
+            </span>
+
+            <span class="gh-shortcut-pill">SOON</span>
+
+        </div>
+
+    </nav>
+
+    <!-- EXPLORE THE CATALOG -->
+    <section class="gh-section">
+
+        <div class="gh-section-header">
+
+            <div>
+
+                <p class="gh-section-eyebrow">
+                    DISCOVER SOMETHING NEW
+                </p>
+
+                <h2>Explore the Catalog</h2>
+
+                <p class="gh-section-description">
+                    Fresh additions from the GameHub database.
+                </p>
+
+            </div>
+
+            <a
+                href="{% url 'games_list' %}"
+                class="gh-section-link"
+            >
+                View all games →
             </a>
 
         </div>
 
-        <!-- COMMUNITY TEXT -->
-        <div class="hero-banner-community">
-            <p>Good games. Great company.</p>
+        {% if discover_games %}
+
+            <div class="gh-game-grid">
+
+                {% for game in discover_games %}
+
+                    <!-- GAME CARD -->
+                    <a
+                        href="{% url 'game_detail' game.id %}"
+                        class="gh-game-tile"
+                    >
+
+                        <!-- GAME COVER -->
+                        <div class="gh-game-cover">
+
+                            {% if game.background_image %}
+
+                                <img
+                                    src="{{ game.background_image }}"
+                                    alt="{{ game.title }} cover"
+                                    loading="lazy"
+                                >
+
+                            {% else %}
+
+                                <span class="gh-image-fallback">
+                                    GameHub
+                                </span>
+
+                            {% endif %}
+
+                            <span class="gh-game-cover-arrow">
+                                ↗
+                            </span>
+
+                        </div>
+
+                        <!-- GAME INFORMATION -->
+                        <div class="gh-game-info">
+
+                            <!-- GAME TITLE -->
+                            <h3>{{ game.title }}</h3>
+
+                            <!-- GAME GENRES -->
+                            <p class="gh-game-genre">
+                                {{ game.genre|default:"Game" }}
+                            </p>
+
+                            <!-- COMMUNITY RATING -->
+                            <div class="gh-game-meta">
+
+                                {% if game.review_count %}
+
+                                    <span class="gh-game-rating">
+                                        ★ {{ game.avg_rating|floatformat:1 }}/10
+                                    </span>
+
+                                    <span class="gh-game-review-count">
+                                        {{ game.review_count }}
+                                        review{{ game.review_count|pluralize }}
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="gh-game-unrated">
+                                        Not rated yet
+                                    </span>
+
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+
+                    </a>
+
+                {% endfor %}
+
+            </div>
+
+        {% else %}
+
+            <!-- EMPTY CATALOG -->
+            <div class="gh-empty">
+
+                The catalog is empty.
+                Add games in Django Admin to see them here.
+
+            </div>
+
+        {% endif %}
+
+    </section>
+
+    <!-- COMMUNITY PICKS -->
+    {% if community_picks %}
+
+        <section class="gh-section gh-section-picks">
+
+            <div class="gh-section-header">
+
+                <div>
+
+                    <p class="gh-section-eyebrow">
+                        WHAT PLAYERS THINK
+                    </p>
+
+                    <h2>Community Picks</h2>
+
+                    <p class="gh-section-description">
+                        Games rated by the GameHub community.
+                    </p>
+
+                </div>
+
+            </div>
+
+            <div class="gh-picks-grid">
+
+                {% for game in community_picks %}
+
+                    <!-- COMMUNITY GAME CARD -->
+                    <a
+                        href="{% url 'game_detail' game.id %}"
+                        class="gh-pick"
+                    >
+
+                        <!-- GAME IMAGE -->
+                        <div class="gh-pick-image">
+
+                            {% if game.background_image %}
+
+                                <img
+                                    src="{{ game.background_image }}"
+                                    alt="{{ game.title }} cover"
+                                    loading="lazy"
+                                >
+
+                            {% else %}
+
+                                <span class="gh-image-fallback">
+                                    GameHub
+                                </span>
+
+                            {% endif %}
+
+                        </div>
+
+                        <!-- GAME DETAILS -->
+                        <div class="gh-pick-content">
+
+                            <small>COMMUNITY RATING</small>
+
+                            <strong>{{ game.title }}</strong>
+
+                            <p>
+                                {{ game.genre|default:"Game"|truncatechars:36 }}
+                            </p>
+
+                            <!-- REAL COMMUNITY RATING -->
+                            <span class="gh-pick-score">
+
+                                ★ {{ game.avg_rating|floatformat:1 }}
+
+                                <span>
+                                    / 10 ·
+                                    {{ game.review_count }}
+                                    review{{ game.review_count|pluralize }}
+                                </span>
+
+                            </span>
+
+                        </div>
+
+                        <span class="gh-pick-arrow">↗</span>
+
+                    </a>
+
+                {% endfor %}
+
+            </div>
+
+        </section>
+
+    {% endif %}
+
+    <!-- COMMUNITY CALL TO ACTION -->
+    <section class="gh-community-cta">
+
+        <div>
+
+            <p class="gh-section-eyebrow">
+                MORE THAN JUST GAMES
+            </p>
+
+            <h2>
+                Better games.
+                <span>Better connections.</span>
+            </h2>
+
+            <p>
+                Build your library, share your reviews
+                and meet players who love the same games.
+            </p>
+
         </div>
 
-    </div>
+        {% if user.is_authenticated %}
 
-    <!-- FEATURED GAME -->
-    <div class="hero-banner-featured">
+            <a
+                href="{% url 'my_friends' %}"
+                class="gh-button gh-button-primary"
+            >
+                My Friends ↗
+            </a>
 
-        <small>FEATURED WORLD</small>
+        {% else %}
 
-        <h3>Elden Ring</h3>
+            <a
+                href="{% url 'register' %}"
+                class="gh-button gh-button-primary"
+            >
+                Create Account ↗
+            </a>
 
-        <p>The Lands Between await. ↗</p>
+        {% endif %}
 
-    </div>
+    </section>
 
-</section>
+</div>
 
 {% endblock %}

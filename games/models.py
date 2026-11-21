@@ -157,3 +157,76 @@ class FriendRequest(models.Model):
             f"{self.sender} -> {self.receiver} "
             f"({self.status})"
         )
+
+
+class SteamAccount(models.Model):
+    # Connect one GameHub user to one Steam account
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="steam_account"
+    )
+
+    # Store the verified SteamID64
+    steam_id = models.CharField(
+        max_length=20,
+        unique=True
+    )
+
+    connected_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    last_synced_at = models.DateTimeField(
+        null=True,
+        blank=True
+    )
+
+    def __str__(self):
+        return f"{self.user.username} - Steam {self.steam_id}"
+
+
+class SteamOwnedGame(models.Model):
+    # Steam account that owns this game
+    steam_account = models.ForeignKey(
+        SteamAccount,
+        on_delete=models.CASCADE,
+        related_name="owned_games"
+    )
+
+    # Steam AppID
+    steam_app_id = models.PositiveIntegerField()
+
+    # Game title from Steam
+    name = models.CharField(
+        max_length=255
+    )
+
+    # Total playtime reported by Steam
+    playtime_minutes = models.PositiveIntegerField(
+        default=0
+    )
+
+    # Optional connection to the GameHub catalog
+    game = models.ForeignKey(
+        Game,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="steam_library_entries"
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["steam_account", "steam_app_id"],
+                name="unique_steam_owned_game"
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.steam_account.user.username} - {self.name}"

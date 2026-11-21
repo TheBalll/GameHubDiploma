@@ -1,0 +1,874 @@
+
+/* GAMEHUB 2.0 - HOME REDESIGN */
+
+.gh-home {
+    --gh-purple: #a78bfa;
+    --gh-cyan: #37d4e9;
+    --gh-pink: #fb7185;
+    --gh-amber: #ffb86c;
+    --gh-stroke: rgba(179, 188, 233, 0.16);
+    --gh-muted: #aab6d2;
+
+    font-family: Inter, ui-sans-serif, system-ui, Arial, sans-serif;
+    color: #f5f7ff;
+
+    background:
+        radial-gradient(
+            ellipse 38% 15% at 13% 6%,
+            rgba(117, 65, 216, 0.16),
+            transparent 85%
+        ),
+        radial-gradient(
+            ellipse 42% 18% at 88% 43%,
+            rgba(29, 117, 165, 0.11),
+            transparent 85%
+        ),
+        #0b1020;
+
+    padding: 30px max(28px, calc((100vw - 1420px) / 2)) 88px;
+}
+
+.gh-home a {
+    text-decoration: none;
+}
+
+/* HERO BANNER */
+
+.gh-hero {
+    position: relative;
+    display: flex;
+    align-items: center;
+    isolation: isolate;
+    min-height: 495px;
+    padding: clamp(32px, 5vw, 76px);
+    border: 1px solid rgba(190, 162, 255, 0.28);
+    border-radius: 25px;
+    overflow: hidden;
+    background: #151b2b;
+
+    box-shadow:
+        0 24px 65px rgba(0, 0, 0, 0.24),
+        0 0 42px rgba(130, 70, 221, 0.08);
+}
+
+.gh-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+
+    background-image:
+        linear-gradient(
+            90deg,
+            rgba(7, 13, 27, 0.97) 0%,
+            rgba(9, 15, 29, 0.91) 28%,
+            rgba(8, 13, 26, 0.35) 67%,
+            rgba(10, 13, 28, 0.32) 100%
+        ),
+        linear-gradient(
+            0deg,
+            rgba(8, 13, 26, 0.84),
+            transparent 46%
+        ),
+        url("https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1245620/library_hero.jpg");
+
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+
+.gh-hero::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+
+    background: radial-gradient(
+        circle at 14% 12%,
+        rgba(138, 92, 246, 0.18),
+        transparent 40%
+    );
+}
+
+.gh-hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 640px;
+}
+
+.gh-eyebrow,
+.gh-section-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #c7b6ff;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 2.1px;
+    text-transform: uppercase;
+}
+
+.gh-live-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #be8bff;
+    box-shadow: 0 0 18px #a478ff;
+}
+
+.gh-hero h1 {
+    max-width: 650px;
+    margin: 22px 0 20px;
+    font-size: clamp(43px, 4.2vw, 68px);
+    font-weight: 850;
+    letter-spacing: -2.6px;
+    line-height: 1.07;
+}
+
+.gh-hero h1 span {
+    color: #b8a0ff;
+}
+
+.gh-hero-description {
+    max-width: 470px;
+    font-size: 16px;
+    line-height: 1.8;
+    color: #c6cee2;
+}
+
+.gh-hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 30px;
+}
+
+/* BUTTONS */
+
+.gh-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    min-height: 46px;
+    padding: 12px 23px;
+    border-radius: 11px;
+    font-weight: 750;
+    font-size: 13px;
+
+    transition:
+        transform 0.2s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.gh-button:hover {
+    transform: translateY(-2px);
+}
+
+.gh-button-primary {
+    color: #fff !important;
+    background: linear-gradient(110deg, #8d5ef9, #6e60f5);
+    box-shadow: 0 9px 25px rgba(123, 83, 242, 0.31);
+}
+
+.gh-button-primary:hover {
+    background: linear-gradient(110deg, #9d74ff, #8276ff);
+    box-shadow: 0 12px 30px rgba(123, 83, 242, 0.39);
+}
+
+.gh-button-secondary {
+    color: #f1f4ff !important;
+    background: rgba(20, 32, 55, 0.76);
+    border: 1px solid rgba(182, 207, 253, 0.32);
+    backdrop-filter: blur(12px);
+}
+
+.gh-button-secondary:hover {
+    background: rgba(37, 49, 80, 0.88);
+}
+
+.gh-hero-footnote {
+    margin-top: 27px;
+    font-size: 12px;
+    color: #929fba;
+}
+
+/* FEATURED GAME */
+
+.gh-hero-featured {
+    position: absolute;
+    right: 25px;
+    bottom: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    text-align: right;
+    padding: 15px 17px;
+    border: 1px solid rgba(210, 194, 252, 0.18);
+    border-radius: 13px;
+    background: rgba(8, 13, 26, 0.49);
+    backdrop-filter: blur(15px);
+}
+
+.gh-hero-featured-label {
+    font-size: 9px;
+    letter-spacing: 1.8px;
+    color: #d0b5ff;
+    font-weight: 800;
+}
+
+.gh-hero-featured strong {
+    font-size: 22px;
+    letter-spacing: -0.5px;
+}
+
+.gh-hero-featured > span:last-child {
+    color: #bfcce2;
+    font-size: 11px;
+}
+
+/* QUICK ACCESS */
+
+.gh-shortcuts {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 20px;
+}
+
+.gh-shortcut {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding: 20px 17px;
+    border: 1px solid var(--gh-stroke);
+    border-radius: 15px;
+    background: linear-gradient(140deg, #18243a, #121a2d);
+    box-shadow: 0 10px 18px rgba(0, 0, 0, 0.12);
+
+    transition:
+        border-color 0.22s ease,
+        transform 0.22s ease;
+}
+
+.gh-shortcut:not(.gh-shortcut-disabled):hover {
+    border-color: rgba(172, 155, 255, 0.55);
+    transform: translateY(-3px);
+}
+
+.gh-shortcut-symbol {
+    display: grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: 47px;
+    height: 47px;
+    border-radius: 14px;
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.gh-shortcut-purple .gh-shortcut-symbol {
+    background: rgba(157, 96, 255, 0.14);
+    color: #c4a2ff;
+    border: 1px solid rgba(166, 127, 255, 0.24);
+}
+
+.gh-shortcut-cyan .gh-shortcut-symbol {
+    background: rgba(55, 212, 233, 0.11);
+    color: #37d4e9;
+    border: 1px solid rgba(55, 212, 233, 0.2);
+}
+
+.gh-shortcut-pink .gh-shortcut-symbol {
+    background: rgba(251, 113, 133, 0.12);
+    color: #ff8fa4;
+    border: 1px solid rgba(251, 113, 133, 0.2);
+}
+
+.gh-shortcut-orange .gh-shortcut-symbol {
+    background: rgba(255, 184, 108, 0.12);
+    color: #ffbf7e;
+    border: 1px solid rgba(255, 184, 108, 0.2);
+}
+
+.gh-shortcut-copy {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.gh-shortcut-copy strong {
+    color: #f9faff;
+    font-size: 14px;
+    font-weight: 750;
+}
+
+.gh-shortcut-copy small {
+    color: #9eabc5;
+    font-size: 11px;
+    line-height: 1.35;
+}
+
+.gh-shortcut-arrow {
+    flex-shrink: 0;
+    align-self: start;
+    color: #bbc8e2;
+    font-size: 17px;
+}
+
+.gh-shortcut-disabled {
+    opacity: 0.78;
+    cursor: default;
+}
+
+.gh-shortcut-pill {
+    flex-shrink: 0;
+    color: #ffc38f;
+    background: rgba(255, 174, 100, 0.1);
+    border: 1px solid rgba(255, 174, 100, 0.23);
+    border-radius: 5px;
+    padding: 5px;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 1px;
+}
+
+/* SECTIONS */
+
+.gh-section {
+    margin-top: 64px;
+}
+
+.gh-section-header {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.gh-section-eyebrow {
+    color: #9d90ea;
+    font-size: 10px;
+    letter-spacing: 1.8px;
+}
+
+.gh-section h2,
+.gh-community-cta h2 {
+    margin: 10px 0 0;
+    color: #f7f8ff;
+    font-size: clamp(26px, 2.5vw, 34px);
+    line-height: 1.15;
+    letter-spacing: -1px;
+}
+
+.gh-section-description {
+    margin-top: 9px;
+    color: #a0aecb;
+    font-size: 13px;
+}
+
+.gh-section-link {
+    color: #c5adff !important;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* GAME GRID */
+
+.gh-game-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 17px;
+}
+
+.gh-game-tile {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid rgba(177, 186, 230, 0.14);
+    background: #121b30;
+    border-radius: 15px;
+
+    transition:
+        transform 0.2s ease,
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.gh-game-tile:hover {
+    transform: translateY(-5px);
+    border-color: rgba(173, 146, 255, 0.5);
+    box-shadow: 0 18px 30px rgba(0, 0, 0, 0.24);
+}
+
+.gh-game-cover {
+    position: relative;
+    height: 244px;
+    background: linear-gradient(145deg, #283557, #15213c);
+    overflow: hidden;
+}
+
+.gh-game-cover img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.gh-game-tile:hover .gh-game-cover img {
+    transform: scale(1.05);
+}
+
+.gh-image-fallback {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    color: #9a92bc;
+    font-weight: 800;
+}
+
+.gh-game-cover-arrow {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    background: rgba(9, 14, 26, 0.78);
+    color: #e8eaff;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.gh-game-tile:hover .gh-game-cover-arrow {
+    opacity: 1;
+}
+
+.gh-game-info {
+    padding: 15px 13px 17px;
+}
+
+.gh-game-info h3 {
+    margin: 0;
+    color: #f5f7ff;
+    font-size: 14px;
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.gh-game-info p {
+    margin-top: 7px;
+    color: #9fb0ce;
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* COMMUNITY PICKS */
+
+.gh-section-picks {
+    margin-top: 60px;
+}
+
+.gh-picks-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.gh-pick {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    min-width: 0;
+    padding: 14px;
+    background: linear-gradient(100deg, #161e34, #12192b);
+    border: 1px solid var(--gh-stroke);
+    border-radius: 16px;
+
+    transition:
+        transform 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.gh-pick:hover {
+    transform: translateY(-3px);
+    border-color: rgba(177, 156, 249, 0.49);
+}
+
+.gh-pick-image {
+    display: grid;
+    place-items: center;
+    flex: 0 0 91px;
+    height: 114px;
+    border-radius: 11px;
+    background: #263250;
+    overflow: hidden;
+}
+
+.gh-pick-image img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.gh-pick-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.gh-pick-content small {
+    display: block;
+    font-size: 10px;
+    color: #9c8fe0;
+    letter-spacing: 1.1px;
+    font-weight: 750;
+    margin-bottom: 8px;
+}
+
+.gh-pick-content strong {
+    display: block;
+    color: #f1f4ff;
+    font-size: 17px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.gh-pick-content p {
+    font-size: 12px;
+    color: #9baac5;
+    margin-top: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.gh-pick-score {
+    display: block;
+    margin-top: 12px;
+    color: #ffc76e;
+    font-size: 14px;
+    font-weight: 750;
+}
+
+.gh-pick-score span {
+    color: #a9b3cb;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.gh-pick-arrow {
+    align-self: start;
+    color: #b3bbd6;
+    font-size: 18px;
+}
+
+/* COMMUNITY CTA */
+
+.gh-community-cta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 30px;
+    margin-top: 72px;
+    padding: 36px 40px;
+    border: 1px solid rgba(166, 125, 255, 0.28);
+    border-radius: 20px;
+
+    background:
+        radial-gradient(
+            circle at 95% 10%,
+            rgba(33, 176, 204, 0.13),
+            transparent 32%
+        ),
+        linear-gradient(110deg, #1b2141, #141b31);
+}
+
+.gh-community-cta h2 span {
+    color: #b8a0ff;
+}
+
+.gh-community-cta p:last-child {
+    margin-top: 12px;
+    color: #aab7d2;
+    font-size: 13px;
+    line-height: 1.65;
+}
+
+.gh-community-cta .gh-button {
+    flex-shrink: 0;
+}
+
+/* ACCESSIBILITY */
+
+.gh-home a:focus-visible {
+    outline: 2px solid #8ee6f2;
+    outline-offset: 4px;
+}
+
+/* SMALLER DESKTOP SCREENS */
+
+@media (max-width: 1260px) {
+    .gh-home {
+        padding-left: 28px;
+        padding-right: 28px;
+    }
+
+    .gh-shortcuts {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .gh-game-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+/* GAME CARD IMPROVEMENTS */
+
+.gh-game-info {
+    padding: 16px 14px 18px;
+}
+
+.gh-game-info h3 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+
+    min-height: 40px;
+    margin: 0;
+
+    color: #f5f7ff;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.45;
+
+    white-space: normal;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    text-overflow: ellipsis;
+}
+
+.gh-game-info p {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+
+    min-height: 34px;
+    margin-top: 9px;
+
+    color: #abb9d5;
+    font-size: 12px;
+    line-height: 1.45;
+
+    white-space: normal;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    text-overflow: ellipsis;
+}
+
+.gh-game-tile {
+    background: linear-gradient(
+        180deg,
+        #172238,
+        #111b30
+    );
+}
+
+.gh-game-tile:hover {
+    border-color: #a78bfa;
+    box-shadow:
+        0 16px 35px rgba(0, 0, 0, 0.3),
+        0 0 22px rgba(139, 92, 246, 0.12);
+}
+
+/* GAME CARD RATINGS */
+
+.gh-game-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(177, 186, 230, 0.12);
+}
+
+.gh-game-rating {
+    color: #ffc76e;
+    font-size: 13px;
+    font-weight: 750;
+}
+
+.gh-game-review-count {
+    color: #98a7c4;
+    font-size: 11px;
+}
+
+.gh-game-unrated {
+    color: #8190ae;
+    font-size: 11px;
+}
+
+.gh-game-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.gh-game-genre {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    white-space: normal;
+    line-height: 1.5;
+    min-height: 36px;
+}
+
+/* DYNAMIC FEATURED GAME */
+
+/* Remove the old static Elden Ring background */
+
+.gh-hero::before {
+    background-image:
+        linear-gradient(
+            90deg,
+            rgba(7, 13, 27, 0.97) 0%,
+            rgba(9, 15, 29, 0.91) 38%,
+            rgba(8, 13, 26, 0.40) 75%,
+            rgba(10, 13, 28, 0.35) 100%
+        ),
+        linear-gradient(
+            0deg,
+            rgba(8, 13, 26, 0.82),
+            transparent 60%
+        );
+}
+
+/* Background image */
+
+.gh-hero-background {
+    position: absolute;
+    inset: 0;
+    z-index: -3;
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+    object-position: center;
+
+    filter: blur(18px) brightness(0.65);
+    transform: scale(1.08);
+}
+
+/* Featured game cover */
+
+.gh-hero-poster {
+    position: absolute;
+    right: 8%;
+    top: 50%;
+    z-index: 1;
+
+    width: min(23%, 275px);
+    aspect-ratio: 3 / 4;
+
+    border: 1px solid rgba(211, 192, 255, 0.3);
+    border-radius: 17px;
+
+    overflow: hidden;
+
+    transform: translateY(-50%) rotate(3deg);
+
+    box-shadow:
+        0 30px 65px rgba(0, 0, 0, 0.55),
+        0 0 50px rgba(139, 92, 246, 0.17);
+
+    transition: transform 0.3s ease;
+}
+
+.gh-hero-poster:hover {
+    transform: translateY(-50%) rotate(0deg) scale(1.03);
+}
+
+.gh-hero-poster img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Featured game information */
+
+.gh-hero-content {
+    max-width: 58%;
+}
+
+.gh-hero-game-title {
+    font-size: clamp(36px, 4vw, 65px);
+    line-height: 1.1;
+    letter-spacing: -1.8px;
+    overflow-wrap: anywhere;
+}
+
+.gh-hero-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+
+    margin-top: 22px;
+}
+
+.gh-hero-genre,
+.gh-hero-year {
+    display: inline-flex;
+    align-items: center;
+
+    padding: 9px 13px;
+
+    background: rgba(139, 92, 246, 0.12);
+    border: 1px solid rgba(167, 139, 250, 0.25);
+    border-radius: 8px;
+
+    color: #d7c7ff;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.gh-hero-year {
+    background: rgba(34, 211, 238, 0.1);
+    border-color: rgba(34, 211, 238, 0.2);
+    color: #83e1ef;
+}
+
+/* Smaller desktop displays */
+
+@media (max-width: 1100px) {
+    .gh-hero-content {
+        max-width: 68%;
+    }
+
+    .gh-hero-poster {
+        right: 3%;
+        width: 23%;
+    }
+}

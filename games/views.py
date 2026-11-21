@@ -2,7 +2,7 @@ import requests
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse, HttpResponseForbidden
 from django.urls import reverse
-from django.db.models import Q
+from django.db.models import Q, Avg, Count
 from django.core.exceptions import PermissionDenied
 
 from django.contrib.auth import authenticate, login, logout
@@ -29,11 +29,54 @@ from django.contrib import messages
 from .models import FriendRequest
 from django.db import transaction
 from django.views.decorators.cache import never_cache
+from random import randrange
+
 
 def home(request):
-    return render(request, 'games/home.html')
+    # Select a random featured game with an image
+    featured_games = (
+        Game.objects
+        .exclude(background_image="")
+        .order_by("id")
+    )
 
+    featured_count = featured_games.count()
 
+    featured_game = (
+        featured_games[randrange(featured_count)]
+        if featured_count > 0
+        else None
+    )
+
+    # Load games with their community ratings
+    discover_games = (
+        Game.objects
+        .exclude(background_image="")
+        .annotate(
+            avg_rating=Avg("review__rating"),
+            review_count=Count("review")
+        )
+        .order_by("-id")[:6]
+    )
+
+    # Find the highest-rated games
+    community_picks = (
+        Game.objects
+        .annotate(
+            avg_rating=Avg("review__rating"),
+            review_count=Count("review")
+        )
+        .filter(review_count__gt=0)
+        .order_by("-avg_rating", "-review_count", "title")[:4]
+    )
+
+    context = {
+        "featured_game": featured_game,
+        "discover_games": discover_games,
+        "community_picks": community_picks,
+    }
+
+    return render(request, "games/home.html", context)
 
 def games_list(request):
     games = Game.objects.order_by("id")

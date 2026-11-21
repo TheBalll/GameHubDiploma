@@ -12,8 +12,12 @@
 
 <section class="steam-page">
 
+    <!-- PAGE HEADER -->
     <div class="steam-page-header">
-        <p class="steam-eyebrow">ACCOUNT INTEGRATIONS</p>
+
+        <p class="steam-eyebrow">
+            ACCOUNT INTEGRATIONS
+        </p>
 
         <h1>Steam Connection</h1>
 
@@ -21,21 +25,31 @@
             Connect your Steam account to bring your
             gaming collection into GameHub.
         </p>
+
     </div>
 
+    <!-- DJANGO MESSAGES -->
     {% if messages %}
+
         {% for message in messages %}
+
             <div class="steam-message">
                 {{ message }}
             </div>
+
         {% endfor %}
+
     {% endif %}
 
+    <!-- STEAM ACCOUNT PANEL -->
     <div class="steam-panel">
 
+        <!-- PANEL HEADING -->
         <div class="steam-panel-heading">
 
-            <div class="steam-symbol">S</div>
+            <div class="steam-symbol">
+                S
+            </div>
 
             <div>
                 <h2>Steam Account</h2>
@@ -46,12 +60,16 @@
 
         {% if steam_account %}
 
-            <!-- CONNECTED ACCOUNT -->
+            <!-- CONNECTED ACCOUNT STATUS -->
             <div class="steam-status steam-status-connected">
+
                 <span class="steam-status-dot"></span>
+
                 Connected
+
             </div>
 
+            <!-- STEAM ACCOUNT INFORMATION -->
             <div class="steam-account-details">
 
                 <span>Steam ID</span>
@@ -68,6 +86,7 @@
 
             </div>
 
+            <!-- STEAM PROFILE LINK -->
             <a
                 href="https://steamcommunity.com/profiles/{{ steam_account.steam_id }}/"
                 class="steam-action-btn"
@@ -78,27 +97,128 @@
             </a>
 
             <p class="steam-note">
-                Your Steam account is connected.
-                Library synchronization will be added next.
+                Your Steam account is successfully
+                connected to GameHub.
             </p>
+
+            <!-- STEAM LIBRARY SYNCHRONIZATION -->
+            <div class="steam-library-section">
+
+                <h3>Steam Library</h3>
+
+                <p class="steam-library-description">
+                    Import your Steam games and playtime
+                    into GameHub.
+                </p>
+
+                <!-- SYNC BUTTON -->
+                <form
+                    method="post"
+                    action="{% url 'steam_sync_library' %}"
+                >
+
+                    {% csrf_token %}
+
+                    <button
+                        type="submit"
+                        class="steam-action-btn"
+                    >
+                        Sync Steam Library
+                    </button>
+
+                </form>
+
+                <!-- LAST SYNCHRONIZATION -->
+                {% if steam_account.last_synced_at %}
+
+                    <p class="steam-note">
+
+                        Last synced:
+                        {{ steam_account.last_synced_at|date:"M d, Y H:i" }}
+
+                    </p>
+
+                {% else %}
+
+                    <p class="steam-note">
+                        Your Steam library has not been
+                        synchronized yet.
+                    </p>
+
+                {% endif %}
+
+                <!-- IMPORTED GAMES -->
+                {% if steam_games %}
+
+                    <div class="steam-library-summary">
+
+                        <h4>
+                            Imported Games:
+                            {{ steam_games_count }}
+                        </h4>
+
+                        <p>
+                            Your most-played Steam games
+                        </p>
+
+                        <div class="steam-imported-games">
+
+                            {% for game in steam_games %}
+
+                                <div class="steam-imported-game">
+
+                                    <!-- GAME NAME -->
+                                    <span>
+                                        {{ game.name }}
+                                    </span>
+
+                                    <!-- PLAYTIME -->
+                                    <strong>
+                                        {{ game.hours }} hours
+                                    </strong>
+
+                                </div>
+
+                            {% endfor %}
+
+                        </div>
+
+                    </div>
+
+                {% elif steam_account.last_synced_at %}
+
+                    <!-- EMPTY STEAM LIBRARY -->
+                    <p class="steam-note">
+                        No games were returned by Steam.
+                    </p>
+
+                {% endif %}
+
+            </div>
 
         {% else %}
 
-            <!-- DISCONNECTED ACCOUNT -->
+            <!-- DISCONNECTED ACCOUNT STATUS -->
             <div class="steam-status">
+
                 <span class="steam-status-dot"></span>
+
                 Not Connected
+
             </div>
 
+            <!-- CONNECTION DESCRIPTION -->
             <p class="steam-description">
                 Connect securely through Steam to prepare
                 your gaming library for synchronization.
             </p>
 
+            <!-- CONNECT STEAM BUTTON -->
             <form
                 method="post"
                 action="{% url 'steam_connect' %}"
             >
+
                 {% csrf_token %}
 
                 <button
@@ -110,6 +230,7 @@
 
             </form>
 
+            <!-- SECURITY INFORMATION -->
             <p class="steam-note">
                 Authentication takes place on Steam.
                 GameHub will never ask for your Steam password.

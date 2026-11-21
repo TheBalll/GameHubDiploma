@@ -158,3 +158,71 @@
     background: #221c38;
     color: #e1d6ff;
 }
+
+/* STEAM LIBRARY SYNC */
+
+.steam-library-section {
+    margin-top: 30px;
+    padding-top: 25px;
+    border-top: 1px solid #35415e;
+}
+
+.steam-library-section h3 {
+    margin-bottom: 10px;
+    font-size: 20px;
+    color: #f5f7ff;
+}
+
+.steam-library-description {
+    margin-bottom: 20px;
+    color: #aab7d0;
+    font-size: 13px;
+}
+
+.steam-library-summary {
+    margin-top: 30px;
+    padding: 20px;
+    background: #10182b;
+    border: 1px solid #303b55;
+    border-radius: 13px;
+}
+
+.steam-library-summary h4 {
+    margin-bottom: 8px;
+    color: #f5f7ff;
+    font-size: 16px;
+}
+
+.steam-library-summary > p {
+    margin-bottom: 18px;
+    color: #aab7d0;
+    font-size: 12px;
+}
+
+.steam-imported-games {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.steam-imported-game {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 14px;
+    background: #19243c;
+    border: 1px solid #303b55;
+    border-radius: 9px;
+}
+
+.steam-imported-game span {
+    color: #e4e9f5;
+    font-size: 13px;
+}
+
+.steam-imported-game strong {
+    color: #83e1ef;
+    font-size: 12px;
+    white-space: nowrap;
+}

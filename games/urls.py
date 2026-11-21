@@ -141,4 +141,12 @@ urlpatterns = [
     steam_views.steam_callback,
     name="steam_callback"
   ),
+
+  # STEAM LIBRARY SYNCHRONIZATION
+
+  path(
+    "steam/sync/",
+    steam_views.steam_sync_library,
+    name="steam_sync_library"
+  ),
 ]

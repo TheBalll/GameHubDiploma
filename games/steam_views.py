@@ -16,6 +16,12 @@ from django.views.decorators.http import require_GET, require_POST
 
 from .models import SteamAccount
 
+from datetime import timedelta
+from django.db import transaction
+
+from .models import Game, SteamOwnedGame
+from .steam_service import SteamSyncError, get_owned_games
+
 
 OPENID_NAMESPACE = "http://specs.openid.net/auth/2.0"
 OPENID_IDENTIFIER = (
@@ -30,19 +36,46 @@ SESSION_KEY = "steam_openid_pending"
 MAX_AUTH_AGE_SECONDS = 900
 
 
+
 @login_required(login_url="login")
 @require_GET
 def steam_settings_page(request):
-    # Show the currently connected Steam account
+    # Get the connected Steam account
     steam_account = SteamAccount.objects.filter(
         user=request.user
     ).first()
 
+    steam_games = []
+    steam_games_count = 0
+
+    if steam_account:
+        # Count imported Steam games
+        steam_games_count = steam_account.owned_games.count()
+
+        # Show the games with the most playtime
+        owned_games = (
+            steam_account.owned_games
+            .order_by("-playtime_minutes")[:8]
+        )
+
+        steam_games = [
+            {
+                "name": game.name,
+                "hours": round(game.playtime_minutes / 60, 1),
+            }
+            for game in owned_games
+        ]
+
     return render(
         request,
         "games/steam_settings.html",
-        {"steam_account": steam_account}
+        {
+            "steam_account": steam_account,
+            "steam_games": steam_games,
+            "steam_games_count": steam_games_count,
+        }
     )
+
 
 
 @login_required(login_url="login")
@@ -292,6 +325,112 @@ def steam_callback(request):
     messages.success(
         request,
         "Steam account connected successfully."
+    )
+
+    return redirect("steam_settings")
+
+
+@login_required(login_url="login")
+@require_POST
+def steam_sync_library(request):
+    # Get the verified Steam account
+    steam_account = SteamAccount.objects.filter(
+        user=request.user
+    ).first()
+
+    if not steam_account:
+        messages.error(
+            request,
+            "Connect your Steam account first."
+        )
+        return redirect("steam_settings")
+
+    # Prevent excessive synchronization requests
+    if steam_account.last_synced_at:
+        elapsed = timezone.now() - steam_account.last_synced_at
+
+        if elapsed < timedelta(seconds=60):
+            messages.info(
+                request,
+                "Please wait before syncing again."
+            )
+            return redirect("steam_settings")
+
+    # Fetch games from the official Steam API
+    try:
+        steam_games = get_owned_games(
+            steam_account.steam_id
+        )
+    except SteamSyncError as error:
+        messages.error(request, str(error))
+        return redirect("steam_settings")
+
+    # Collect valid Steam AppIDs
+    valid_games = {}
+
+    for item in steam_games:
+        if not isinstance(item, dict):
+            continue
+
+        app_id = item.get("appid")
+
+        if (
+            not isinstance(app_id, int)
+            or isinstance(app_id, bool)
+            or app_id <= 0
+        ):
+            continue
+
+        valid_games[app_id] = item
+
+    # Match Steam games with the existing GameHub catalog
+    matched_games = dict(
+        Game.objects.filter(
+            steam_id__in=valid_games.keys()
+        ).values_list("steam_id", "id")
+    )
+
+    # Save or update the imported Steam games
+    with transaction.atomic():
+
+        for app_id, item in valid_games.items():
+
+            raw_name = item.get("name")
+
+            if isinstance(raw_name, str) and raw_name.strip():
+                name = raw_name.strip()[:255]
+            else:
+                name = f"Steam App {app_id}"
+
+            playtime = item.get("playtime_forever", 0)
+
+            if (
+                not isinstance(playtime, int)
+                or isinstance(playtime, bool)
+                or playtime < 0
+            ):
+                playtime = 0
+
+            SteamOwnedGame.objects.update_or_create(
+                steam_account=steam_account,
+                steam_app_id=app_id,
+                defaults={
+                    "name": name,
+                    "playtime_minutes": playtime,
+                    "game_id": matched_games.get(app_id),
+                }
+            )
+
+        # Update the last successful synchronization time
+        steam_account.last_synced_at = timezone.now()
+        steam_account.save(
+            update_fields=["last_synced_at"]
+        )
+
+    messages.success(
+        request,
+        f"Steam library synced successfully! "
+        f"{len(valid_games)} games imported or updated."
     )
 
     return redirect("steam_settings")

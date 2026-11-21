@@ -1,0 +1,323 @@
+
+{% extends 'games/base.html' %}
+{% load static %}
+
+{% block title %}Steam Library | GameHub{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'games/css/steam-library.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<section class="sl-page">
+
+    <!-- HEADER -->
+    <div class="sl-header">
+
+        <div>
+            <p class="sl-eyebrow">YOUR GAME COLLECTION</p>
+            <h1>Steam Library</h1>
+
+            <p class="sl-description">
+                Explore your connected Steam collection.
+            </p>
+        </div>
+
+        <div class="sl-header-actions">
+
+            <a href="{% url 'steam_settings' %}"
+               class="sl-secondary-btn">
+                Steam Settings
+            </a>
+
+            <form
+                method="post"
+                action="{% url 'steam_sync_library' %}"
+            >
+                {% csrf_token %}
+
+                <button type="submit" class="sl-primary-btn">
+                    Sync Library
+                </button>
+            </form>
+
+        </div>
+
+    </div>
+
+    <!-- MESSAGES -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="sl-message">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- LIBRARY STATISTICS -->
+    <div class="sl-stats">
+
+        <div class="sl-stat-card">
+            <span class="sl-stat-label">TOTAL GAMES</span>
+
+            <strong>{{ total_games }}</strong>
+
+            <p>Games in your Steam collection</p>
+        </div>
+
+        <div class="sl-stat-card">
+            <span class="sl-stat-label">TOTAL PLAYTIME</span>
+
+            <strong>{{ total_hours }} h</strong>
+
+            <p>Hours across your Steam games</p>
+        </div>
+
+        <div class="sl-stat-card">
+            <span class="sl-stat-label">LAST SYNCED</span>
+
+            <strong class="sl-stat-date">
+                {% if steam_account.last_synced_at %}
+                    {{ steam_account.last_synced_at|date:"M d, Y" }}
+                {% else %}
+                    Never
+                {% endif %}
+            </strong>
+
+            <p>Library synchronization</p>
+        </div>
+
+    </div>
+
+    <!-- SEARCH AND FILTERS -->
+    <div class="sl-section-header">
+
+        <div>
+            <p class="sl-eyebrow">YOUR COLLECTION</p>
+            <h2>All Steam Games</h2>
+            <p>{{ results_count }} games found</p>
+        </div>
+
+    </div>
+
+    <form method="get" class="sl-filters" id="steamLibraryFilters">
+
+        <input
+            type="search"
+            name="q"
+            value="{{ search_query }}"
+            placeholder="Search your Steam games..."
+            aria-label="Search Steam games"
+            class="sl-search"
+        >
+
+        <select
+            name="sort"
+            id="steamLibrarySort"
+            class="sl-sort"
+            aria-label="Sort Steam games"
+        >
+
+            <option
+                value="most_played"
+                {% if sort == "most_played" %}selected{% endif %}
+            >
+                Most Played
+            </option>
+
+            <option
+                value="least_played"
+                {% if sort == "least_played" %}selected{% endif %}
+            >
+                Least Played
+            </option>
+
+            <option
+                value="name"
+                {% if sort == "name" %}selected{% endif %}
+            >
+                Name A–Z
+            </option>
+
+        </select>
+
+        <button type="submit" class="sl-primary-btn">
+            Search
+        </button>
+
+    </form>
+
+    <!-- GAMES GRID -->
+    {% if page_games %}
+
+        <div class="sl-games-grid">
+
+            {% for item in page_games %}
+
+                <article class="sl-game-card">
+
+                    <!-- GAME COVER -->
+                    <div class="sl-game-cover">
+
+                        <div class="sl-cover-placeholder">
+                            <span>GAMEHUB</span>
+                        </div>
+
+                        <img
+                            src="https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/{{ item.entry.steam_app_id }}/library_600x900.jpg"
+                            data-fallback="{{ item.entry.game.background_image|default:'' }}"
+                            alt="{{ item.entry.name }} cover"
+                            loading="lazy"
+                            class="sl-cover-image"
+                        >
+
+                    </div>
+
+                    <!-- GAME DETAILS -->
+                    <div class="sl-game-info">
+
+                        <h3 title="{{ item.entry.name }}">
+                            {{ item.entry.name }}
+                        </h3>
+
+                        <div class="sl-playtime">
+
+                            <span>PLAYTIME</span>
+
+                            <strong>
+                                {{ item.hours }} hours
+                            </strong>
+
+                        </div>
+
+                        {% if item.entry.game_id %}
+
+                            <a
+                                href="{% url 'game_detail' item.entry.game_id %}"
+                                class="sl-game-link"
+                            >
+                                View in GameHub ↗
+                            </a>
+
+                        {% else %}
+
+                            <a
+                                href="https://store.steampowered.com/app/{{ item.entry.steam_app_id }}/"
+                                class="sl-game-link"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                View on Steam ↗
+                            </a>
+
+                        {% endif %}
+
+                    </div>
+
+                </article>
+
+            {% endfor %}
+
+        </div>
+
+        <!-- PAGINATION -->
+        {% if page_obj.has_other_pages %}
+
+            <div class="sl-pagination">
+
+                {% if page_obj.has_previous %}
+
+                    <a href="?q={{ search_query|urlencode }}&sort={{ sort }}&page={{ page_obj.previous_page_number }}">
+                        ← Previous
+                    </a>
+
+                {% endif %}
+
+                <span>
+                    Page {{ page_obj.number }}
+                    of {{ page_obj.paginator.num_pages }}
+                </span>
+
+                {% if page_obj.has_next %}
+
+                    <a href="?q={{ search_query|urlencode }}&sort={{ sort }}&page={{ page_obj.next_page_number }}">
+                        Next →
+                    </a>
+
+                {% endif %}
+
+            </div>
+
+        {% endif %}
+
+    {% else %}
+
+        <!-- EMPTY STATE -->
+        <div class="sl-empty">
+
+            <h2>No games found</h2>
+
+            <p>
+                {% if search_query %}
+                    Try another search term.
+                {% else %}
+                    Your Steam library is empty.
+                    Synchronize your Steam account to import games.
+                {% endif %}
+            </p>
+
+        </div>
+
+    {% endif %}
+
+</section>
+
+<!-- STEAM LIBRARY INTERACTIONS -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const filterForm = document.getElementById(
+            "steamLibraryFilters"
+        );
+
+        const sortSelect = document.getElementById(
+            "steamLibrarySort"
+        );
+
+        // Automatically submit when the sorting changes
+        if (filterForm && sortSelect) {
+            sortSelect.addEventListener("change", function () {
+                filterForm.requestSubmit();
+            });
+        }
+
+        // Handle missing Steam cover images
+        document.querySelectorAll(".sl-cover-image").forEach(function (img) {
+
+            img.addEventListener("error", function () {
+
+                const fallback = img.dataset.fallback;
+
+                if (fallback && !img.dataset.fallbackAttempted) {
+                    img.dataset.fallbackAttempted = "true";
+                    img.src = fallback;
+                    return;
+                }
+
+                // Keep the styled placeholder visible
+                img.remove();
+
+            });
+
+            // Handle images that failed before the listener was attached
+            if (img.complete && img.naturalWidth === 0) {
+                img.dispatchEvent(new Event("error"));
+            }
+
+        });
+
+    });
+</script>
+
+{% endblock %}

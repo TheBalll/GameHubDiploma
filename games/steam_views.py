@@ -21,6 +21,9 @@ from django.db import transaction
 
 from .models import Game, SteamOwnedGame
 from .steam_service import SteamSyncError, get_owned_games
+from django.core.paginator import Paginator
+from django.db.models import Sum
+from .models import SteamOwnedGame
 
 
 OPENID_NAMESPACE = "http://specs.openid.net/auth/2.0"
@@ -434,3 +437,90 @@ def steam_sync_library(request):
     )
 
     return redirect("steam_settings")
+
+@login_required(login_url="login")
+@require_GET
+def steam_library_page(request):
+    # Get the connected Steam account
+    steam_account = SteamAccount.objects.filter(
+        user=request.user
+    ).first()
+
+    if not steam_account:
+        messages.info(
+            request,
+            "Connect your Steam account first."
+        )
+        return redirect("steam_settings")
+
+    # Get all imported Steam games
+    all_games = SteamOwnedGame.objects.filter(
+        steam_account=steam_account
+    ).select_related("game")
+
+    # Calculate statistics from the complete library
+    total_games = all_games.count()
+
+    total_minutes = (
+        all_games.aggregate(
+            total=Sum("playtime_minutes")
+        )["total"] or 0
+    )
+
+    total_hours = round(total_minutes / 60, 1)
+
+    # Read search and sorting preferences
+    search_query = request.GET.get("q", "").strip()[:100]
+    sort = request.GET.get("sort", "most_played")
+
+    sort_options = {
+        "most_played": ("-playtime_minutes", "name"),
+        "least_played": ("playtime_minutes", "name"),
+        "name": ("name", "steam_app_id"),
+    }
+
+    if sort not in sort_options:
+        sort = "most_played"
+
+    # Filter games by name
+    games = all_games
+
+    if search_query:
+        games = games.filter(
+            name__icontains=search_query
+        )
+
+    results_count = games.count()
+
+    # Apply the selected sorting order
+    games = games.order_by(*sort_options[sort])
+
+    # Show 24 games per page
+    paginator = Paginator(games, 24)
+    page_obj = paginator.get_page(
+        request.GET.get("page")
+    )
+
+    # Prepare playtime in hours for the template
+    page_games = [
+        {
+            "entry": entry,
+            "hours": round(entry.playtime_minutes / 60, 1),
+        }
+        for entry in page_obj.object_list
+    ]
+
+    return render(
+        request,
+        "games/steam_library.html",
+        {
+            "steam_account": steam_account,
+            "total_games": total_games,
+            "total_hours": total_hours,
+            "results_count": results_count,
+            "search_query": search_query,
+            "sort": sort,
+            "page_obj": page_obj,
+            "page_games": page_games,
+        }
+    )

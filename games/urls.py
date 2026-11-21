@@ -149,4 +149,12 @@ urlpatterns = [
     steam_views.steam_sync_library,
     name="steam_sync_library"
   ),
+
+  # STEAM LIBRARY PAGE
+
+  path(
+    "steam/library/",
+    steam_views.steam_library_page,
+    name="steam_library"
+  ),
 ]

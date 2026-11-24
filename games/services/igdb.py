@@ -1,5 +1,6 @@
 
 import time
+from threading import Lock
 
 import requests
 from django.conf import settings
@@ -10,6 +11,9 @@ TWITCH_TOKEN_URL = "https://id.twitch.tv/oauth2/token"
 
 _access_token = None
 _token_expires_at = 0
+_query_lock = Lock()
+_next_query_at = 0.0
+_query_interval = 0.26
 
 
 def get_access_token():
@@ -38,19 +42,38 @@ def get_access_token():
 
     return _access_token
 
+
+def query_igdb(endpoint, query):
+    """Send an authenticated query, with process-local pacing."""
+    global _next_query_at
+
+    with _query_lock:
+        token = get_access_token()
+        delay = _next_query_at - time.monotonic()
+        if delay > 0:
+            time.sleep(delay)
+
+        _next_query_at = time.monotonic() + _query_interval
+        response = requests.post(
+            f"{IGDB_API_URL}/{endpoint}",
+            headers={
+                "Client-ID": settings.IGDB_CLIENT_ID,
+                "Authorization": f"Bearer {token}",
+            },
+            data=query,
+            timeout=15,
+        )
+
+    response.raise_for_status()
+    return response.json()
+
+
 def get_games(limit=10, offset=0):
     if not isinstance(limit, int) or not 1 <= limit <= 100:
         raise ValueError("Limit must be between 1 and 100.")
 
     if not isinstance(offset, int) or not 0 <= offset <= 10000:
         raise ValueError("Offset must be between 0 and 10000.")
-
-    token = get_access_token()
-
-    headers = {
-        "Client-ID": settings.IGDB_CLIENT_ID,
-        "Authorization": f"Bearer {token}",
-    }
 
     query = f"""
         fields name, summary, first_release_date,
@@ -68,15 +91,7 @@ def get_games(limit=10, offset=0):
         offset {offset};
     """
 
-    response = requests.post(
-        f"{IGDB_API_URL}/games",
-        headers=headers,
-        data=query,
-        timeout=15,
-    )
-
-    response.raise_for_status()
-    return response.json()
+    return query_igdb("games", query)
 
 
 def search_games(name, limit=5):
@@ -85,13 +100,6 @@ def search_games(name, limit=5):
 
     if not isinstance(limit, int) or not 1 <= limit <= 20:
         raise ValueError("Limit must be between 1 and 20.")
-
-    token = get_access_token()
-
-    headers = {
-        "Client-ID": settings.IGDB_CLIENT_ID,
-        "Authorization": f"Bearer {token}",
-    }
 
     # Escape special characters
     safe_name = (
@@ -109,16 +117,7 @@ def search_games(name, limit=5):
         limit {limit};
     """
 
-    response = requests.post(
-        f"{IGDB_API_URL}/games",
-        headers=headers,
-        data=query,
-        timeout=15,
-    )
-
-    response.raise_for_status()
-
-    games = response.json()
+    games = query_igdb("games", query)
 
     # Normalize the searched title
     search_name = " ".join(
@@ -142,13 +141,6 @@ def get_game_by_id(igdb_id):
     if not isinstance(igdb_id, int) or igdb_id <= 0:
         raise ValueError("Invalid IGDB game ID.")
 
-    token = get_access_token()
-
-    headers = {
-        "Client-ID": settings.IGDB_CLIENT_ID,
-        "Authorization": f"Bearer {token}",
-    }
-
     query = f"""
         fields name, summary, first_release_date,
                cover.image_id,
@@ -159,16 +151,7 @@ def get_game_by_id(igdb_id):
         limit 1;
     """
 
-    response = requests.post(
-        f"{IGDB_API_URL}/games",
-        headers=headers,
-        data=query,
-        timeout=15,
-    )
-
-    response.raise_for_status()
-
-    games = response.json()
+    games = query_igdb("games", query)
 
     if not games:
         return None

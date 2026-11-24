@@ -157,4 +157,10 @@ urlpatterns = [
     steam_views.steam_library_page,
     name="steam_library"
   ),
+
+  path(
+    "steam/library/<int:steam_id>/add/",
+    views.add_steam_game_to_library,
+    name="add_steam_game_to_library"
+  ),
 ]

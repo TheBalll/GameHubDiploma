@@ -69,7 +69,13 @@
         <div class="sl-stat-card">
             <span class="sl-stat-label">TOTAL PLAYTIME</span>
 
-            <strong>{{ total_hours }} h</strong>
+            <strong>
+                {% if total_hours is None %}
+                    Unavailable
+                {% else %}
+                    {{ total_hours }} h
+                {% endif %}
+            </strong>
 
             <p>Hours across your Steam games</p>
         </div>
@@ -186,7 +192,11 @@
                             <span>PLAYTIME</span>
 
                             <strong>
-                                {{ item.hours }} hours
+                                {% if item.hours is None %}
+                                    Unavailable
+                                {% else %}
+                                    {{ item.hours }} hours
+                                {% endif %}
                             </strong>
 
                         </div>

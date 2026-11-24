@@ -22,7 +22,7 @@ from django.db import transaction
 from .models import Game, SteamOwnedGame
 from .steam_service import SteamSyncError, get_owned_games
 from django.core.paginator import Paginator
-from django.db.models import Sum
+from django.db.models import F, Sum
 from .models import SteamOwnedGame
 
 
@@ -58,13 +58,13 @@ def steam_settings_page(request):
         # Show the games with the most playtime
         owned_games = (
             steam_account.owned_games
-            .order_by("-playtime_minutes")[:8]
+            .order_by(F("playtime_minutes").desc(nulls_last=True), "name", "steam_app_id")[:8]
         )
 
         steam_games = [
             {
                 "name": game.name,
-                "hours": round(game.playtime_minutes / 60, 1),
+                "hours": game.playtime_hours,
             }
             for game in owned_games
         ]
@@ -405,14 +405,14 @@ def steam_sync_library(request):
             else:
                 name = f"Steam App {app_id}"
 
-            playtime = item.get("playtime_forever", 0)
+            playtime = item.get("playtime_forever")
 
             if (
                 not isinstance(playtime, int)
                 or isinstance(playtime, bool)
                 or playtime < 0
             ):
-                playtime = 0
+                playtime = None
 
             SteamOwnedGame.objects.update_or_create(
                 steam_account=steam_account,
@@ -461,21 +461,18 @@ def steam_library_page(request):
     # Calculate statistics from the complete library
     total_games = all_games.count()
 
-    total_minutes = (
-        all_games.aggregate(
-            total=Sum("playtime_minutes")
-        )["total"] or 0
-    )
-
-    total_hours = round(total_minutes / 60, 1)
+    total_minutes = all_games.aggregate(total=Sum("playtime_minutes"))["total"]
+    total_hours = None
+    if total_minutes is not None or total_games == 0:
+        total_hours = round((total_minutes or 0) / 60, 1)
 
     # Read search and sorting preferences
     search_query = request.GET.get("q", "").strip()[:100]
     sort = request.GET.get("sort", "most_played")
 
     sort_options = {
-        "most_played": ("-playtime_minutes", "name"),
-        "least_played": ("playtime_minutes", "name"),
+        "most_played": (F("playtime_minutes").desc(nulls_last=True), "name", "steam_app_id"),
+        "least_played": (F("playtime_minutes").asc(nulls_last=True), "name", "steam_app_id"),
         "name": ("name", "steam_app_id"),
     }
 
@@ -505,7 +502,7 @@ def steam_library_page(request):
     page_games = [
         {
             "entry": entry,
-            "hours": round(entry.playtime_minutes / 60, 1),
+            "hours": entry.playtime_hours,
         }
         for entry in page_obj.object_list
     ]

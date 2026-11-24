@@ -80,6 +80,7 @@ class LibraryEntry(models.Model):
         choices=STATUS_CHOICES,
         default='plan_to_play'
     )
+    added_at = models.DateTimeField(auto_now_add=True, null=True)
 
     def __str__(self):
         return f"{self.user.username} - {self.game.title}"
@@ -204,7 +205,8 @@ class SteamOwnedGame(models.Model):
 
     # Total playtime reported by Steam
     playtime_minutes = models.PositiveIntegerField(
-        default=0
+        null=True,
+        blank=True
     )
 
     # Optional connection to the GameHub catalog
@@ -227,6 +229,12 @@ class SteamOwnedGame(models.Model):
                 name="unique_steam_owned_game"
             )
         ]
+
+    @property
+    def playtime_hours(self):
+        if self.playtime_minutes is None:
+            return None
+        return round(self.playtime_minutes / 60, 1)
 
     def __str__(self):
         return f"{self.steam_account.user.username} - {self.name}"

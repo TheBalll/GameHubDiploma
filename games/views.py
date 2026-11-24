@@ -1,3 +1,5 @@
+from collections import Counter
+
 import requests
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse, HttpResponseForbidden
@@ -12,7 +14,7 @@ from django.contrib.auth.decorators import login_required
 
 from django.views.decorators.http import require_GET, require_POST
 
-from .models import Game, Review, LibraryEntry, UserProfile
+from .models import Game, Review, LibraryEntry, UserProfile, SteamAccount, SteamOwnedGame
 from .forms import ReviewForm, LibraryEntryForm, UserProfileForm, UserEditForm
 from django.core.paginator import Paginator
 from games.services.igdb import search_games as search_igdb_games
@@ -397,43 +399,240 @@ def library(request):
         'library_entries': library_entries
     })
 
-    
 @login_required
 @require_GET
 def library_data(request):
-    entries = (
+
+    # Normalize titles for exact comparison
+    def normalize_title(title):
+        return "".join(
+            character
+            for character in (title or "").casefold()
+            if character.isalnum()
+        )
+
+    library_entries = (
         LibraryEntry.objects
         .filter(user=request.user)
         .select_related("game")
-        .order_by("game__title")
+        .order_by("game__title", "pk")
     )
+
+    steam_entries = list(
+        SteamOwnedGame.objects
+        .filter(steam_account__user=request.user)
+        .select_related("game")
+        .order_by("steam_app_id")
+    )
+
+    steam_account = (
+        SteamAccount.objects
+        .filter(user=request.user)
+        .only("last_synced_at")
+        .first()
+    )
+
+    if not steam_account:
+        missing_steam_playtime = "Not connected"
+    elif not steam_account.last_synced_at:
+        missing_steam_playtime = "Not synced"
+    else:
+        missing_steam_playtime = "Not in Steam Library"
 
     games = []
 
-    for entry in entries:
-        games.append({
-            "id": entry.game.id,
+    gamehub_games_by_id = {}
+    gamehub_games_by_steam_id = {}
+    gamehub_games_by_title = {}
+    ambiguous_titles = set()
+
+    # Build the GameHub library
+    for entry in library_entries:
+
+        if entry.game_id in gamehub_games_by_id:
+            continue
+
+        game_data = {
+            "id": entry.game_id,
             "title": entry.game.title,
-            "genre": entry.game.genre,
+            "genre": entry.game.genre or "Unknown",
+            "image": entry.game.background_image or "",
+
             "status": entry.status,
             "status_display": entry.get_status_display(),
+            "added_at": entry.added_at,
+
+            "playtime_minutes": None,
+            "playtime_hours": None,
+            "playtime_display": missing_steam_playtime,
+
+            "is_on_steam": False,
+
             "details_url": reverse(
                 "game_detail",
-                kwargs={"game_id": entry.game.id}
+                kwargs={"game_id": entry.game_id}
             ),
+
             "edit_url": reverse(
                 "edit_library_entry",
-                kwargs={"game_id": entry.game.id}
+                kwargs={"game_id": entry.game_id}
             ),
+
             "remove_url": reverse(
                 "remove_from_library",
-                kwargs={"game_id": entry.game.id}
+                kwargs={"game_id": entry.game_id}
             ),
+
+            "steam_url": None,
+        }
+
+        gamehub_games_by_id[entry.game_id] = game_data
+
+        if entry.game.steam_id:
+            gamehub_games_by_steam_id[entry.game.steam_id] = game_data
+
+        title_key = normalize_title(entry.game.title)
+
+        if title_key in gamehub_games_by_title:
+            ambiguous_titles.add(title_key)
+        else:
+            gamehub_games_by_title[title_key] = entry.game
+
+        games.append(game_data)
+
+    steam_title_counts = Counter(normalize_title(entry.name) for entry in steam_entries)
+    steam_link_counts = Counter(entry.game_id for entry in steam_entries if entry.game_id)
+    steam_catalog_games = {}
+    steam_matches = {}
+    matched_game_ids = set()
+
+    # Reserve AppID and unambiguous catalog links before considering titles.
+    for steam_entry in steam_entries:
+        app_id = steam_entry.steam_app_id
+        catalog_game = steam_entry.game
+        if catalog_game and (
+            catalog_game.steam_id not in (None, app_id)
+            or (catalog_game.steam_id is None and steam_link_counts[catalog_game.pk] > 1)
+        ):
+            catalog_game = None
+        steam_catalog_games[app_id] = catalog_game
+
+        game_data = gamehub_games_by_steam_id.get(app_id)
+        if game_data is None and catalog_game:
+            game_data = gamehub_games_by_id.get(catalog_game.pk)
+
+        if game_data:
+            steam_matches[app_id] = game_data
+            matched_game_ids.add(game_data["id"])
+
+    # Merge Steam games with existing GameHub entries
+    for steam_entry in steam_entries:
+
+        playtime_minutes = steam_entry.playtime_minutes
+        playtime_hours = steam_entry.playtime_hours
+        if playtime_hours is None:
+            playtime_display = "Unavailable"
+        elif 0 < playtime_minutes < 60:
+            playtime_display = f"{playtime_minutes} min"
+        else:
+            unit = "hour" if playtime_hours == 1 else "hours"
+            playtime_display = f"{playtime_hours:g} {unit}"
+
+        # Generate the Steam store URL
+        steam_url = (
+            f"https://store.steampowered.com/"
+            f"app/{steam_entry.steam_app_id}/"
+        )
+
+        # Generate the Steam cover URL
+        steam_image = (
+            "https://shared.fastly.steamstatic.com/"
+            f"store_item_assets/steam/apps/{steam_entry.steam_app_id}/"
+            "library_600x900.jpg"
+        )
+
+        steam_data = {
+            "is_on_steam": True,
+            "steam_app_id": steam_entry.steam_app_id,
+            "playtime_minutes": playtime_minutes,
+            "playtime_hours": playtime_hours,
+            "playtime_display": playtime_display,
+            "steam_url": steam_url,
+        }
+
+        # Only match by title when neither record identifies another app.
+        game_data = steam_matches.get(steam_entry.steam_app_id)
+        title_key = normalize_title(steam_entry.name)
+        title_match = gamehub_games_by_title.get(title_key)
+
+        if (
+            game_data is None
+            and steam_entry.game_id is None
+            and title_key
+            and title_key not in ambiguous_titles
+            and steam_title_counts[title_key] == 1
+            and title_match
+            and title_match.steam_id is None
+            and title_match.pk not in matched_game_ids
+        ):
+            game_data = gamehub_games_by_id[title_match.pk]
+
+        # Update an existing card instead of creating a duplicate
+        if game_data:
+            game_data.update(steam_data, image=game_data["image"] or steam_image)
+            continue
+
+        # Create a separate card only when no GameHub entry matches
+        catalog_game = steam_catalog_games[steam_entry.steam_app_id]
+
+        if catalog_game:
+            title = catalog_game.title
+            genre = catalog_game.genre or "Unknown"
+            image = catalog_game.background_image or steam_image
+
+            details_url = reverse(
+                "game_detail",
+                kwargs={"game_id": catalog_game.id}
+            )
+        else:
+            title = steam_entry.name
+            genre = "Steam Game"
+            image = steam_image
+            details_url = None
+
+        games.append({
+            "id": f"steam-{steam_entry.steam_app_id}",
+
+            "title": title,
+            "genre": genre,
+            "image": image,
+
+            "status": None,
+            "status_display": "Not Added",
+            "added_at": None,
+
+            "add_to_library_url": reverse(
+                "add_steam_game_to_library",
+                kwargs={"steam_id": steam_entry.steam_app_id}
+            ),
+
+            "details_url": details_url,
+            "edit_url": None,
+            "remove_url": None,
+
+            **steam_data,
         })
+
+    # Sort all games alphabetically
+    games.sort(
+        key=lambda game: game["title"].casefold()
+    )
 
     status_choices = [
         {"value": value, "label": label}
-        for value, label in LibraryEntry._meta.get_field("status").choices
+        for value, label in LibraryEntry._meta.get_field(
+            "status"
+        ).choices
     ]
 
     return JsonResponse({
@@ -463,6 +662,88 @@ def add_to_library(request, game_id):
         })
 
     return redirect("library")
+
+
+@login_required
+@require_POST
+def add_steam_game_to_library(request, steam_id):
+    # Find the Steam game in the current user's Steam library.
+    steam_entry = (
+        SteamOwnedGame.objects
+        .filter(
+            steam_account__user=request.user,
+            steam_app_id=steam_id
+        )
+        .select_related("game")
+        .first()
+    )
+
+    if not steam_entry:
+        return JsonResponse({
+            "success": False,
+            "error": "Steam game not found in your library."
+        }, status=404)
+
+    # Reuse the linked GameHub game or import it from Steam.
+    game = steam_entry.game
+    if game and game.steam_id is None:
+        other_apps = SteamOwnedGame.objects.filter(
+            steam_account_id=steam_entry.steam_account_id, game=game
+        ).exclude(pk=steam_entry.pk)
+        if other_apps.exists():
+            game = None
+
+    if game is None or game.steam_id not in (None, steam_id):
+        try:
+            game, created_game = import_game_from_steam(steam_id)
+
+        except (requests.RequestException, ValueError, KeyError):
+            return JsonResponse({
+                "success": False,
+                "error": "Unable to import the Steam game."
+            }, status=502)
+
+        if game is None:
+            return JsonResponse({
+                "success": False,
+                "error": "Game details could not be retrieved from Steam."
+            }, status=404)
+
+    # Link the Steam entry and create the personal library entry.
+    with transaction.atomic():
+        steam_entry.game = game
+        steam_entry.save(update_fields=["game"])
+
+        library_entry, created = LibraryEntry.objects.get_or_create(
+            user=request.user,
+            game=game
+        )
+
+    return JsonResponse({
+        "success": True,
+        "created": created,
+        "game_id": game.id,
+        "title": game.title,
+        "status": library_entry.status,
+        "status_display": library_entry.get_status_display(),
+
+        "edit_url": reverse(
+            "edit_library_entry",
+            kwargs={"game_id": game.id}
+        ),
+
+        "remove_url": reverse(
+            "remove_from_library",
+            kwargs={"game_id": game.id}
+        ),
+
+        "message": (
+            "Game added to your GameHub library."
+            if created
+            else "Game is already in your GameHub library."
+        )
+    })
+
 
 @require_POST
 @login_required

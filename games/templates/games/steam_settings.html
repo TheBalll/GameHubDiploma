@@ -182,7 +182,11 @@
 
                                     <!-- PLAYTIME -->
                                     <strong>
-                                        {{ game.hours }} hours
+                                        {% if game.hours is None %}
+                                            Unavailable
+                                        {% else %}
+                                            {{ game.hours }} hours
+                                        {% endif %}
                                     </strong>
 
                                 </div>

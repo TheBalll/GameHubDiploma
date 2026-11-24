@@ -25,3 +25,19 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+
+# Local AI development instructions
+/AGENTS.md
+
+# Local database and backups
+db.sqlite3
+db.sqlite3.backup
+db.sqlite3-journal
+db.sqlite3-wal
+db.sqlite3-shm
+
+# Environment variables
+.env
+
+# Local AI instructions
+/AGENTS.md

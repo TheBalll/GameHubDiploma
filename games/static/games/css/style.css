@@ -1830,6 +1830,46 @@ input[type="number"] {
     font-weight: 700;
 }
 
+/* GAMEHUB STATUS AND STEAM PLAYTIME */
+
+.library-game-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.library-meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.library-meta-label {
+    color: #a1a1b8;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.library-meta-value {
+    color: #f3f4f6;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: right;
+}
+
+.library-status-not-added {
+    color: #a1a1b8;
+    background: rgba(148, 163, 184, 0.10);
+    border-color: rgba(148, 163, 184, 0.25);
+}
+
+.library-meta-muted {
+    color: #9ca3af;
+    font-weight: 500;
+}
+
 /* CARD ACTIONS */
 
 .library-actions {

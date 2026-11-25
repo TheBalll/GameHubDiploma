@@ -1301,7 +1301,7 @@ def import_igdb_game(request, igdb_id):
             )
         })
 
-    except requests.RequestException:
+    except (requests.RequestException, ValueError, TypeError, KeyError):
         return JsonResponse(
             {"error": "IGDB is temporarily unavailable."},
             status=503

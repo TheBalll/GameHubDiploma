@@ -1,12 +1,13 @@
 
-from datetime import datetime, timezone
-
 import requests
 from django.core.management.base import BaseCommand, CommandError
 from django.db import IntegrityError, transaction
+from django.utils import timezone
 
 from games.models import Game
-from games.services.igdb import get_games
+from games.services.igdb import get_games, igdb_cover_url, igdb_release_year
+from games.services.metadata_enrichment import save_imported_metadata
+from games.services.steam_igdb_mapping import _is_positive_id
 
 
 class Command(BaseCommand):
@@ -34,16 +35,17 @@ class Command(BaseCommand):
 
         while processed < limit:
             current_limit = min(batch_size, limit - processed)
+            started_at = timezone.now()
 
             try:
                 games = get_games(
                     limit=current_limit,
                     offset=processed,
                 )
-            except (requests.RequestException, KeyError, ValueError) as error:
+            except (requests.RequestException, KeyError, TypeError, ValueError):
                 raise CommandError(
-                    f"IGDB request failed at offset {processed}: {error}"
-                ) from error
+                    f"IGDB request failed at offset {processed}."
+                ) from None
 
             if not games:
                 self.stdout.write(
@@ -51,11 +53,15 @@ class Command(BaseCommand):
                 )
                 break
 
+            metadata_rows = []
             for data in games:
+                if not isinstance(data, dict):
+                    skipped_count += 1
+                    continue
                 igdb_id = data.get("id")
                 title = data.get("name")
 
-                if not igdb_id or not title:
+                if not _is_positive_id(igdb_id) or not isinstance(title, str) or not title.strip():
                     skipped_count += 1
                     continue
 
@@ -76,22 +82,14 @@ class Command(BaseCommand):
                 developer = ", ".join(developers)[:150]
 
                 release_timestamp = data.get("first_release_date")
-                if not release_timestamp:
+                release_year = igdb_release_year(release_timestamp) if release_timestamp else None
+                if not release_year:
                     skipped_count += 1
                     continue
 
-                release_year = datetime.fromtimestamp(
-                    release_timestamp,
-                    tz=timezone.utc,
-                ).year
-
-                image_id = (data.get("cover") or {}).get("image_id")
-                image_url = (
-                    "https://images.igdb.com/igdb/image/upload/"
-                    f"t_cover_big/{image_id}.jpg"
-                    if image_id
-                    else ""
-                )
+                cover = data.get("cover")
+                image_id = cover.get("image_id") if isinstance(cover, dict) else None
+                image_url = igdb_cover_url(image_id) or ""
 
                 try:
                     with transaction.atomic():
@@ -100,6 +98,7 @@ class Command(BaseCommand):
                         ).first()
 
                         if game:
+                            metadata_rows.append(data)
                             skipped_count += 1
                             continue
 
@@ -128,13 +127,13 @@ class Command(BaseCommand):
                             developer=developer,
                             background_image=image_url,
                         )
-                        created_count += 1
-
-                        self.stdout.write(
-                            self.style.SUCCESS(
-                                f"Imported: {game.title}"
-                            )
+                    metadata_rows.append(data)
+                    created_count += 1
+                    self.stdout.write(
+                        self.style.SUCCESS(
+                            f"Imported: {game.title}"
                         )
+                    )
 
                 except IntegrityError as error:
                     skipped_count += 1
@@ -144,6 +143,7 @@ class Command(BaseCommand):
                         )
                     )
 
+            save_imported_metadata(metadata_rows, started_at)
             processed += len(games)
 
             self.stdout.write(

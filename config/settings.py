@@ -84,6 +84,10 @@ DATABASES = {
     }
 }
 
+catalog_sqlite_path = os.environ.get("GAMEHUB_SQLITE_PATH")
+if catalog_sqlite_path:
+    DATABASES["default"]["NAME"] = Path(catalog_sqlite_path).expanduser().resolve(strict=True)
+
 
 # Password validation
 # https://docs.djangoproject.com/en/6.1/ref/settings/#auth-password-validators

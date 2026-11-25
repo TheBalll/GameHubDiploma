@@ -1,5 +1,6 @@
-
+import re
 import time
+from datetime import UTC, datetime
 from threading import Lock
 
 import requests
@@ -8,12 +9,37 @@ from django.conf import settings
 
 IGDB_API_URL = "https://api.igdb.com/v4"
 TWITCH_TOKEN_URL = "https://id.twitch.tv/oauth2/token"
+ID_LIST_FIELDS = ("genres", "themes", "game_modes", "keywords", "similar_games")
+RATING_FIELDS = ("rating", "aggregated_rating", "total_rating")
+METADATA_FIELDS = (
+    *ID_LIST_FIELDS, *RATING_FIELDS, *(f"{field}_count" for field in RATING_FIELDS),
+    "cover.image_id", "updated_at",
+)
+CATALOG_GAME_FIELDS = ", ".join((
+    "id", "name", "summary", "first_release_date", "involved_companies.company.name",
+    "involved_companies.developer", *("genres.id, genres.name" if field == "genres" else field for field in METADATA_FIELDS),
+))
 
 _access_token = None
 _token_expires_at = 0
 _query_lock = Lock()
 _next_query_at = 0.0
 _query_interval = 0.26
+
+
+def igdb_cover_url(image_id):
+    if isinstance(image_id, str) and re.fullmatch(r"[A-Za-z0-9_-]+", image_id):
+        return f"https://images.igdb.com/igdb/image/upload/t_cover_big/{image_id}.jpg"
+    return None
+
+
+def igdb_release_year(timestamp):
+    if type(timestamp) is int:
+        try:
+            return datetime.fromtimestamp(timestamp, UTC).year
+        except (ValueError, OverflowError, OSError):
+            pass
+    return None
 
 
 def get_access_token():
@@ -76,13 +102,7 @@ def get_games(limit=10, offset=0):
         raise ValueError("Offset must be between 0 and 10000.")
 
     query = f"""
-        fields name, summary, first_release_date,
-               cover.image_id,
-               genres.name,
-               involved_companies.company.name,
-               involved_companies.developer,
-               total_rating,
-               total_rating_count;
+        fields {CATALOG_GAME_FIELDS};
         where total_rating_count > 20
               & cover != null
               & first_release_date != null;
@@ -91,7 +111,10 @@ def get_games(limit=10, offset=0):
         offset {offset};
     """
 
-    return query_igdb("games", query)
+    games = query_igdb("games", query)
+    if not isinstance(games, list):
+        raise ValueError("IGDB returned an unexpected catalog response.")
+    return games
 
 
 def search_games(name, limit=5):
@@ -142,17 +165,15 @@ def get_game_by_id(igdb_id):
         raise ValueError("Invalid IGDB game ID.")
 
     query = f"""
-        fields name, summary, first_release_date,
-               cover.image_id,
-               genres.name,
-               involved_companies.company.name,
-               involved_companies.developer;
+        fields {CATALOG_GAME_FIELDS};
         where id = {igdb_id};
         limit 1;
     """
 
     games = query_igdb("games", query)
 
+    if not isinstance(games, list) or len(games) > 1:
+        raise ValueError("IGDB returned an unexpected game response.")
     if not games:
         return None
 

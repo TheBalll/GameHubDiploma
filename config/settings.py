@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 
 from pathlib import Path
 import os
+import re
 from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -25,10 +26,24 @@ load_dotenv(BASE_DIR / ".env")
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ["DJANGO_SECRET_KEY"]
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DJANGO_DEBUG", "").strip().casefold() in {"1", "true", "yes", "on"}
 
-ALLOWED_HOSTS = []
+
+def _environment_list(name):
+    values = (value.strip() for value in os.getenv(name, "").split(","))
+    return [value for value in values if value and "*" not in value]
+
+
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "[::1]", *_environment_list("DJANGO_ALLOWED_HOSTS")]
+CSRF_TRUSTED_ORIGINS = _environment_list("DJANGO_CSRF_TRUSTED_ORIGINS")
+
+# Codespaces forwards the default Django port through an exact HTTPS hostname.
+codespace_name = os.getenv("CODESPACE_NAME", "").strip().lower()
+codespaces_domain = os.getenv("GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN", "app.github.dev").strip().lower()
+if re.fullmatch(r"[a-z0-9-]+", codespace_name) and re.fullmatch(r"(?:[a-z0-9-]+\.)+[a-z0-9-]+", codespaces_domain):
+    codespace_host = f"{codespace_name}-8000.{codespaces_domain}"
+    ALLOWED_HOSTS.append(codespace_host)
+    CSRF_TRUSTED_ORIGINS.append(f"https://{codespace_host}")
 
 
 # Application definition

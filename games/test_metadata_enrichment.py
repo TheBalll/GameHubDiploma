@@ -24,6 +24,7 @@ from .services.metadata_enrichment import (
     enrich_catalog_metadata,
     enrich_steam_metadata,
 )
+from .services.recommendation_ranking import rank_local_recommendations
 
 
 class MetadataModelTests(TestCase):
@@ -637,6 +638,33 @@ class CatalogMetadataEnrichmentTests(TestCase):
         self.assertIn("IGDB ID 20: IGDB returned HTTP 429. Retry: yes.", errors.getvalue())
         self.assertEqual(self.api.call_count, 2)
         self.assertEqual(IgdbGameMetadata.objects.filter(fetched_at=old).count(), 3)
+
+    def test_catalog_updates_local_recommendations_for_a_user_without_steam(self):
+        user = get_user_model().objects.create_user("gamehub-only-player")
+        signals = [self.game(igdb_id, genre="Adventure" if igdb_id < 104 else "Strategy")
+                   for igdb_id in range(101, 107)]
+        preferred = self.game(201, title="Z Preferred", genre="Adventure")
+        other = self.game(202, title="A Unrelated", genre="Adventure")
+        for index, game in enumerate(signals):
+            Review.objects.create(user=user, game=game, rating=10 if index < 3 else 1)
+        before = rank_local_recommendations(user)
+        self.assertEqual([item.game_id for item in before.items], [other.pk, preferred.pk])
+        self.assertEqual(before.items[0].ranking_score, before.items[1].ranking_score)
+        self.assertTrue(all(item.match_score is None for item in before.items))
+        self.api.return_value = [
+            {"id": igdb_id, "genres": [31], "themes": [41]} if igdb_id in (101, 102, 103, 201)
+            else {"id": igdb_id, "genres": [32], "themes": [42]}
+            for igdb_id in (*range(101, 107), 201, 202)
+        ]
+
+        self.assertEqual(enrich_catalog_metadata().enriched, 8)
+        after = rank_local_recommendations(user)
+
+        self.assertEqual([item.game_id for item in after.items], [preferred.pk])
+        self.assertEqual(after.items[0].genre_ids, (31,))
+        self.assertEqual(after.items[0].match_score, 73)
+        self.assertEqual(after.items[0].reasons[0].feature_ids, (31,))
+        self.api.assert_called_once()
 
     @patch("games.services.igdb.query_igdb")
     def test_batch_import_caches_metadata_and_leaves_unidentified_catalog_rows_unlinked(self, query):

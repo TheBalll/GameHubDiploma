@@ -12,6 +12,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const searchForm = document.getElementById("search-page-form");
 
     const apiUrl = app.dataset.apiUrl;
+    const loginUrl = app.dataset.loginUrl;
+    const canImport = app.dataset.canImport === "true";
 
     if (
         !searchInput ||
@@ -146,7 +148,13 @@ document.addEventListener("DOMContentLoaded", function () {
         content.appendChild(description);
 
         // VIEW GAME
-        if (isExternal) {
+        if (isExternal && !canImport) {
+            const link = document.createElement("a");
+            link.className = "search-view-game";
+            link.href = game.store_url || loginUrl;
+            link.textContent = game.store_url ? "View Game" : "Sign In";
+            content.appendChild(link);
+        } else if (isExternal) {
             const button = document.createElement("button");
 
             button.type = "button";
@@ -159,7 +167,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 try {
                     const csrfToken = document.querySelector(
-                        "#igdb-csrf-form input[name='csrfmiddlewaretoken']"
+                        "#game-import-csrf-form input[name='csrfmiddlewaretoken']"
                     )?.value;
 
                     if (!csrfToken) {
@@ -178,6 +186,11 @@ document.addEventListener("DOMContentLoaded", function () {
                             "Accept": "application/json"
                         }
                     });
+
+                    if (response.status === 401) {
+                        window.location.href = loginUrl;
+                        return;
+                    }
 
                     if (!response.ok) {
                         throw new Error(

@@ -10,12 +10,15 @@
     class="search-page"
     id="search-page-app"
     data-api-url="{% url 'search_results' %}"
+    data-login-url="{% url 'login' %}"
+    data-can-import="{{ user.is_authenticated|yesno:'true,false' }}"
 >
 
-    <!-- CSRF TOKEN FOR IGDB IMPORT -->
-    <form id="igdb-csrf-form" hidden>
-        {% csrf_token %}
-    </form>
+    {% if user.is_authenticated %}
+        <form id="game-import-csrf-form" method="post" hidden>
+            {% csrf_token %}
+        </form>
+    {% endif %}
 
     <!-- PAGE HEADER -->
     <div class="search-page-header">

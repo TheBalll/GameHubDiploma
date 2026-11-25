@@ -1,4 +1,6 @@
+import re
 from collections import Counter
+from hashlib import sha256
 
 import requests
 from django.shortcuts import render, get_object_or_404, redirect
@@ -904,10 +906,7 @@ def search_results(request):
     # Only search external APIs when there is a query
     # and no active genre filter.
     if query and not genre:
-        cache_key = (
-            "gamehub_unified_search_v1:"
-            + query.casefold()
-        )
+        cache_key = "gamehub_unified_search_v2:" + sha256(query.casefold().encode()).hexdigest()
 
         external_results = cache.get(cache_key)
 
@@ -924,6 +923,7 @@ def search_results(request):
                 for item in igdb_games:
                     igdb_id = item.get("id")
                     title = item.get("name")
+                    slug = item.get("slug")
 
                     if not igdb_id or not title:
                         continue
@@ -980,6 +980,9 @@ def search_results(request):
                         "release_year": release_year,
                         "image": image_url,
                         "url": None,
+                        "store_url": f"https://www.igdb.com/games/{slug}"
+                        if isinstance(slug, str) and re.fullmatch(r"[a-z0-9][a-z0-9-]*", slug)
+                        else None,
                         "source": "igdb",
                     })
 
@@ -1012,6 +1015,8 @@ def search_results(request):
                         "release_year": "",
                         "image": item.get("image", ""),
                         "url": None,
+                        "store_url": f"https://store.steampowered.com/app/{steam_id}/"
+                        if type(steam_id) is int and steam_id > 0 else None,
                         "source": "steam",
                     })
 
@@ -1275,6 +1280,9 @@ def delete_review_from_profile(request, review_id):
 
 @require_POST
 def import_igdb_game(request, igdb_id):
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Sign in to import games."}, status=401)
+
     try:
         game, created = import_game_from_igdb(igdb_id)
 
@@ -1303,6 +1311,9 @@ def import_igdb_game(request, igdb_id):
 
 @require_POST
 def import_steam_game(request, steam_id):
+    if not request.user.is_authenticated:
+        return JsonResponse({"success": False, "error": "Sign in to import games."}, status=401)
+
     try:
         game, created = import_game_from_steam(steam_id)
 

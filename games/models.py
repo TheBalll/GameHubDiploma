@@ -83,6 +83,11 @@ class LibraryEntry(models.Model):
     )
     added_at = models.DateTimeField(auto_now_add=True, null=True)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["user", "game"], name="unique_library_entry_user_game"),
+        ]
+
     def __str__(self):
         return f"{self.user.username} - {self.game.title}"
 

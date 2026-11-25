@@ -2,7 +2,7 @@ from collections import Counter
 
 import requests
 from django.shortcuts import render, get_object_or_404, redirect
-from django.http import JsonResponse, HttpResponseForbidden
+from django.http import JsonResponse, HttpResponseForbidden, Http404
 from django.urls import reverse
 from django.db.models import Q, Avg, Count
 from django.core.exceptions import PermissionDenied
@@ -24,6 +24,7 @@ from datetime import datetime, timezone
 from games.models import Game
 from games.services.steam import search_steam_games
 from games.services.game_import import import_game_from_steam
+from games.services.library_entries import add_catalog_game
 from django.core.cache import cache
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404, redirect
@@ -643,12 +644,9 @@ def library_data(request):
 @login_required
 @require_POST
 def add_to_library(request, game_id):
-    game = get_object_or_404(Game, id=game_id)
-
-    entry, created = LibraryEntry.objects.get_or_create(
-        user=request.user,
-        game=game
-    )
+    entry, created = add_catalog_game(request.user, game_id)
+    if entry is None:
+        raise Http404("Game not found.")
 
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
         return JsonResponse({
@@ -710,14 +708,9 @@ def add_steam_game_to_library(request, steam_id):
             }, status=404)
 
     # Link the Steam entry and create the personal library entry.
-    with transaction.atomic():
-        steam_entry.game = game
-        steam_entry.save(update_fields=["game"])
-
-        library_entry, created = LibraryEntry.objects.get_or_create(
-            user=request.user,
-            game=game
-        )
+    library_entry, created = add_catalog_game(request.user, game.pk, steam_entry=steam_entry)
+    if library_entry is None:
+        return JsonResponse({"success": False, "error": "Game not found."}, status=404)
 
     return JsonResponse({
         "success": True,

@@ -1,10 +1,17 @@
 from django.urls import path
 from . import views
 from . import steam_views
+from . import recommendation_views
 
 
 urlpatterns = [
     path('', views.home, name='home'),
+    path('recommendations/data/', recommendation_views.recommendation_data, name='recommendation_data'),
+    path(
+        'recommendations/igdb/<int:igdb_id>/add/',
+        recommendation_views.add_recommended_igdb_game,
+        name='add_recommended_igdb_game',
+    ),
 
     path('games/', views.games_list, name='games_list'),
     path('games/<int:game_id>/', views.game_detail, name='game_detail'),

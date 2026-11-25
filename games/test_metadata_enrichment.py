@@ -5,6 +5,7 @@ from io import StringIO
 from unittest.mock import Mock, patch
 
 from django.contrib.auth import get_user_model
+from django.core import signing
 from django.core.exceptions import ValidationError
 from django.core.management import CommandError, call_command
 from django.db import IntegrityError, OperationalError, connection, transaction
@@ -15,6 +16,7 @@ from django.utils import timezone
 from requests import HTTPError, Response, Timeout
 
 from .models import Game, IgdbGameMetadata, LibraryEntry, Review, SteamAccount, SteamIgdbIdentity, SteamOwnedGame
+from .recommendation_views import ADD_TOKEN_SALT
 from .services.metadata_enrichment import (
     AMBIGUOUS_MAPPING_TTL,
     CONFIRMED_MAPPING_TTL,
@@ -665,6 +667,34 @@ class CatalogMetadataEnrichmentTests(TestCase):
         self.assertEqual(after.items[0].match_score, 73)
         self.assertEqual(after.items[0].reasons[0].feature_ids, (31,))
         self.api.assert_called_once()
+
+    @patch("games.services.igdb.query_igdb")
+    def test_single_and_recommended_imports_use_the_same_response_for_metadata(self, query):
+        user = get_user_model().objects.create_user("import-player")
+        self.client.force_login(user)
+        catalog, recommended = self.zero_vote_critic_rows()
+        query.side_effect = [
+            [dict(catalog, name="Catalog game", genres=[{"id": 31, "name": "Adventure"}], game_modes=[41])],
+            [dict(recommended, name="Recommended game", themes=[52], similar_games=[10])],
+        ]
+
+        with self.assertLogs("games.services.metadata_enrichment", level="WARNING") as logs:
+            self.assertEqual(self.client.post(reverse("import_igdb_game", args=[10])).status_code, 200)
+            token = signing.dumps([user.pk, 20, []], salt=ADD_TOKEN_SALT)
+            response = self.client.post(reverse("add_recommended_igdb_game", args=[20]), {"token": token})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()["created"])
+        self.assertTrue(LibraryEntry.objects.filter(user=user, game__igdb_id=20).exists())
+        self.assertEqual(IgdbGameMetadata.objects.get(pk=10).genres, [31])
+        self.assertEqual(IgdbGameMetadata.objects.get(pk=20).similar_games, [10])
+        self.assertIsNone(IgdbGameMetadata.objects.get(pk=20).aggregated_rating)
+        self.assertEqual(len(logs.output), 2)
+        self.assertEqual(query.call_count, 2)
+        for call in query.call_args_list:
+            self.assertIn("genres.id", call.args[1])
+            self.assertIn("similar_games", call.args[1])
+        self.api.assert_not_called()
 
     @patch("games.services.igdb.query_igdb")
     def test_batch_import_caches_metadata_and_leaves_unidentified_catalog_rows_unlinked(self, query):

@@ -711,6 +711,74 @@
     border-top: 1px solid rgba(177, 186, 230, 0.12);
 }
 
+.gh-recommendation-card,
+.gh-recommendation-card .gh-game-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.gh-recommendation-card .gh-game-info {
+    flex: 1;
+}
+
+.gh-recommendation-card .gh-game-info h3 a {
+    color: inherit;
+}
+
+.gh-recommendation-card .gh-game-genre,
+.gh-recommendation-card .gh-recommendation-reason {
+    min-height: 0;
+}
+
+.gh-recommendation-card .gh-recommendation-reason {
+    display: block;
+}
+
+.gh-recommendation-match {
+    align-self: flex-start;
+    margin-top: 10px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: rgba(167, 139, 250, 0.17);
+    color: #d9c9ff;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.gh-recommendation-card .gh-game-meta {
+    margin-top: auto;
+    padding-top: 12px;
+    border-top: 0;
+}
+
+.gh-recommendation-card .gh-button {
+    width: 100%;
+    min-height: 36px;
+    padding: 6px 8px;
+    border: 0;
+    font-size: 12px;
+}
+
+.gh-recommendations .gh-button:disabled {
+    cursor: wait;
+    opacity: 0.7;
+}
+
+.gh-recommendation-feedback,
+.gh-recommendation-card-error {
+    margin: 8px 0;
+    color: #c5adff;
+    font-size: 12px;
+}
+
+.gh-recommendation-card-error {
+    color: #ffc2ca;
+}
+
+.gh-recommendations [hidden] {
+    display: none;
+}
+
 .gh-game-rating {
     color: #ffc76e;
     font-size: 13px;

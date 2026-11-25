@@ -238,6 +238,8 @@
 
     </nav>
 
+    {% include "games/_recommendations.html" %}
+
     <!-- EXPLORE THE CATALOG -->
     <section class="gh-section">
 
@@ -496,5 +498,9 @@
     </section>
 
 </div>
+
+{% if user.is_authenticated %}
+    <script src="{% static 'games/js/recommendations.js' %}" defer></script>
+{% endif %}
 
 {% endblock %}

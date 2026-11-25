@@ -1,0 +1,45 @@
+<section class="gh-section gh-recommendations" aria-labelledby="recommendations-title"
+    {% if user.is_authenticated %}data-recommendations data-url="{% url 'recommendation_data' %}"{% endif %}>
+    <div class="gh-section-header">
+        <div>
+            <h2 id="recommendations-title">Recommended Games</h2>
+            <p class="gh-section-description" data-recommendation-description hidden></p>
+        </div>
+        {% if user.is_authenticated %}
+            <a href="{% url 'library' %}" class="gh-section-link">My Library</a>
+        {% endif %}
+    </div>
+
+    {% if user.is_authenticated %}
+        {% csrf_token %}
+        <div class="gh-empty" data-recommendation-state>
+            <span data-recommendation-message role="status">Loading recommendations…</span>
+            <button type="button" class="gh-button gh-button-secondary" data-recommendation-retry hidden>Try Again</button>
+            <a href="{% url 'login' %}" class="gh-section-link" data-recommendation-sign-in hidden>Sign In</a>
+        </div>
+        <p class="gh-recommendation-feedback" data-recommendation-feedback role="status" hidden></p>
+        <div class="gh-game-grid" data-recommendation-grid aria-busy="true" hidden></div>
+        <template data-recommendation-card>
+            <article class="gh-game-tile gh-recommendation-card">
+                <div class="gh-game-cover">
+                    <img data-card-cover alt="" loading="lazy" hidden>
+                    <span class="gh-image-fallback" data-card-placeholder>GameHub</span>
+                </div>
+                <div class="gh-game-info">
+                    <h3><a data-card-link hidden></a><span data-card-title></span></h3>
+                    <p class="gh-game-genre" data-card-meta hidden></p>
+                    <span class="gh-recommendation-match" data-card-match hidden
+                        title="How closely the game's features match your gaming preferences"></span>
+                    <p class="gh-recommendation-reason" data-card-reason hidden></p>
+                    <div class="gh-game-meta">
+                        <button type="button" class="gh-button gh-button-primary" data-card-add>Add to Library</button>
+                    </div>
+                    <span class="gh-recommendation-card-error" data-card-error role="status" hidden></span>
+                </div>
+            </article>
+        </template>
+        <noscript><p class="gh-section-description">Enable JavaScript to load recommendations.</p></noscript>
+    {% else %}
+        <a href="{% url 'login' %}" class="gh-button gh-button-secondary">Sign In for Recommendations</a>
+    {% endif %}
+</section>

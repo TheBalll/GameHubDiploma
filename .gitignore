@@ -1,43 +1,53 @@
+
 # Python
 __pycache__/
 *.py[cod]
-*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
 
-# Django
-db.sqlite3
+# Django database and backups
+*.sqlite3
+*.sqlite3-*
+*.sqlite3.*
+*.bak
+*.backup
 
-# Virtual environment
+# Virtual environments
 venv/
 .venv/
 env/
 
-# VS Code
-.vscode/
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# User uploaded files
-/media/
-
-# Environment variables / secrets
+# Environment variables and secrets
 .env
 .env.*
 !.env.example
 
-# Local AI development instructions
+# User uploaded files
+/media/
+
+# Collected static files
+/staticfiles/
+
+# Local development instructions
 /AGENTS.md
 
-# Local database and backups
-db.sqlite3
-db.sqlite3.backup
-db.sqlite3-journal
-db.sqlite3-wal
-db.sqlite3-shm
+# IDE and editor settings
+.vscode/
+.idea/
+*.swp
 
-# Environment variables
-.env
+# JavaScript dependencies
+node_modules/
 
-# Local AI instructions
-/AGENTS.md
+# Operating system files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp

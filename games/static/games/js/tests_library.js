@@ -4,9 +4,9 @@ const { join } = require("node:path");
 const { test } = require("node:test");
 const { Script } = require("node:vm");
 
-const template = readFileSync(join(__dirname, "templates/games/library.html"), "utf8");
+const template = readFileSync(join(__dirname, "../../../templates/games/library.html"), "utf8");
 const libraryScript = new Script(
-    readFileSync(join(__dirname, "static/games/js/library.js"), "utf8"),
+    readFileSync(join(__dirname, "library.js"), "utf8"),
     { filename: "library.js" }
 );
 

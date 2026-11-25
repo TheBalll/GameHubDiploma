@@ -312,7 +312,13 @@
 }
 
 .navbar .profile-dropdown-logout {
+    width: 100%;
+    border: 0;
+    background: transparent;
     color: #fb929a;
+    font-family: inherit;
+    line-height: inherit;
+    cursor: pointer;
 }
 
 .navbar .profile-dropdown-logout:hover {

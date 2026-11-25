@@ -4,8 +4,9 @@ from hashlib import sha256
 
 import requests
 from django.shortcuts import render, get_object_or_404, redirect
-from django.http import JsonResponse, HttpResponseForbidden, Http404
+from django.http import JsonResponse, HttpResponseForbidden, HttpResponseRedirect, Http404
 from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.db.models import Q, Avg, Count
 from django.core.exceptions import PermissionDenied
 
@@ -265,6 +266,13 @@ def login_view(request):
     if request.user.is_authenticated:
         return redirect("home")
 
+    next_url = request.POST.get("next", request.GET.get("next", "")).strip()
+    if not url_has_allowed_host_and_scheme(
+        next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure(),
+    ):
+        next_url = ""
+    context = {"next_url": next_url}
+
     if request.method == "POST":
         username = request.POST.get("username", "").strip()
         password = request.POST.get("password", "")
@@ -284,6 +292,7 @@ def login_view(request):
                 }, status=400)
 
             return render(request, "games/login.html", {
+                **context,
                 "error": message
             })
 
@@ -295,14 +304,15 @@ def login_view(request):
 
         if user is not None:
             login(request, user)
+            redirect_url = next_url or reverse("home")
 
             if is_ajax:
                 return JsonResponse({
                     "success": True,
-                    "redirect_url": reverse("home")
+                    "redirect_url": redirect_url
                 })
 
-            return redirect("home")
+            return HttpResponseRedirect(redirect_url)
 
         message = "Invalid username or password."
 
@@ -313,12 +323,14 @@ def login_view(request):
             }, status=400)
 
         return render(request, "games/login.html", {
+            **context,
             "error": message
         })
 
-    return render(request, "games/login.html")
+    return render(request, "games/login.html", context)
 
 
+@require_POST
 def logout_view(request):
     logout(request)
     return redirect('home')
@@ -390,10 +402,8 @@ def edit_review(request, review_id):
     })
 
 
+@login_required
 def library(request):
-    if not request.user.is_authenticated:
-        return redirect('login')
-
     library_entries = LibraryEntry.objects.filter(
         user=request.user
     )
